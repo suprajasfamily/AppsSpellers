@@ -1,12 +1,12 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import MainTabNavigator from "@/navigation/MainTabNavigator";
-import ModalScreen from "@/screens/ModalScreen";
+import TypingScreen from "@/screens/TypingScreen";
+import SettingsScreen from "@/screens/SettingsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
-  Main: undefined;
-  Modal: undefined;
+  Typing: undefined;
+  Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -17,16 +17,16 @@ export default function RootStackNavigator() {
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Main"
-        component={MainTabNavigator}
+        name="Typing"
+        component={TypingScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="Modal"
-        component={ModalScreen}
+        name="Settings"
+        component={SettingsScreen}
         options={{
           presentation: "modal",
-          headerTitle: "Modal",
+          headerTitle: "Settings",
         }}
       />
     </Stack.Navigator>
