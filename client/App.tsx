@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, ActivityIndicator, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -11,6 +11,30 @@ import { queryClient } from "@/lib/query-client";
 
 import RootStackNavigator from "@/navigation/RootStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PreferencesProvider, usePreferences } from "@/contexts/PreferencesContext";
+import { useTheme } from "@/hooks/useTheme";
+
+function AppContent() {
+  const { isLoading } = usePreferences();
+  const { theme } = useTheme();
+
+  if (isLoading) {
+    return (
+      <View style={[styles.loading, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <>
+      <NavigationContainer>
+        <RootStackNavigator />
+      </NavigationContainer>
+      <StatusBar style="auto" />
+    </>
+  );
+}
 
 export default function App() {
   return (
@@ -19,10 +43,9 @@ export default function App() {
         <SafeAreaProvider>
           <GestureHandlerRootView style={styles.root}>
             <KeyboardProvider>
-              <NavigationContainer>
-                <RootStackNavigator />
-              </NavigationContainer>
-              <StatusBar style="auto" />
+              <PreferencesProvider>
+                <AppContent />
+              </PreferencesProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
         </SafeAreaProvider>
@@ -34,5 +57,10 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
