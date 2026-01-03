@@ -26,18 +26,23 @@ export function Calculator({ onResult }: CalculatorProps) {
         setExpression("");
         setResult("");
         break;
+      case "DEL":
+        if (expression.length > 0) {
+          const funcs = ["sin(", "cos(", "tan(", "log(", "ln(", "√("];
+          for (const func of funcs) {
+            if (expression.endsWith(func)) {
+              setExpression(expression.slice(0, -func.length));
+              return;
+            }
+          }
+          setExpression(expression.slice(0, -1));
+        }
+        break;
       case "=":
         const evalResult = evaluateExpression(expression);
         setResult(evalResult);
         if (onResult && evalResult !== "Error") {
           onResult(evalResult);
-        }
-        break;
-      case "±":
-        if (expression.startsWith("-")) {
-          setExpression(expression.slice(1));
-        } else if (expression) {
-          setExpression("-" + expression);
         }
         break;
       case "sin":
@@ -52,19 +57,6 @@ export function Calculator({ onResult }: CalculatorProps) {
         break;
       default:
         setExpression(expression + btn);
-    }
-  };
-
-  const handleBackspace = () => {
-    if (expression.length > 0) {
-      const funcs = ["sin(", "cos(", "tan(", "log(", "ln(", "√("];
-      for (const func of funcs) {
-        if (expression.endsWith(func)) {
-          setExpression(expression.slice(0, -func.length));
-          return;
-        }
-      }
-      setExpression(expression.slice(0, -1));
     }
   };
 
@@ -124,20 +116,11 @@ export function Calculator({ onResult }: CalculatorProps) {
                 label={btn}
                 onPress={() => handleButtonPress(btn)}
                 width={buttonWidth}
-                isSpecial={btn === "C" || btn === "="}
+                isSpecial={btn === "C" || btn === "=" || btn === "DEL"}
               />
             ))}
           </View>
         ))}
-      </View>
-
-      <View style={styles.backspaceRow}>
-        <KeyButton
-          label="DEL"
-          onPress={handleBackspace}
-          width={buttonWidth * 2}
-          isSpecial
-        />
       </View>
     </View>
   );
@@ -181,10 +164,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginVertical: 2,
-  },
-  backspaceRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: Spacing.xs,
   },
 });
