@@ -40,16 +40,16 @@ export function evaluateExpression(expression: string): string {
 }
 
 export const calculatorButtons = [
-  ["C", "(", ")", "÷"],
-  ["7", "8", "9", "×"],
-  ["4", "5", "6", "-"],
-  ["1", "2", "3", "+"],
-  ["0", ".", "=", "^"],
+  ["C", "DEL", "(", ")"],
+  ["7", "8", "9", "÷"],
+  ["4", "5", "6", "×"],
+  ["1", "2", "3", "-"],
+  ["0", ".", "=", "+"],
 ];
 
 export const scientificButtons = [
   ["sin", "cos", "tan", "√"],
-  ["log", "ln", "π", "±"],
+  ["log", "ln", "π", "^"],
 ];
 
 export function isOperator(char: string): boolean {
