@@ -38,11 +38,11 @@ export function KeyButton({
   const buttonColor = useCustomColor ? getButtonColor() : theme.specialKey;
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.95, { damping: 15, stiffness: 400 });
+    scale.value = withSpring(0.9, { damping: 15, stiffness: 400 });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+    scale.value = withSpring(1, { damping: 12, stiffness: 300 });
   };
 
   const handlePress = () => {
