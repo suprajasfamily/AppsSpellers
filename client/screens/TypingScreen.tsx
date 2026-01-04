@@ -54,6 +54,11 @@ export default function TypingScreen() {
   const [documents, setDocuments] = useState<DriveDocument[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const [isLoadingDocument, setIsLoadingDocument] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(50);
+
+  const availableHeight = height - insets.top - insets.bottom - headerHeight - Spacing.md - Spacing.sm;
+  const typingAreaHeight = availableHeight * 0.25;
+  const keyboardAreaHeight = availableHeight * 0.75;
 
   useEffect(() => {
     return () => {
@@ -276,7 +281,10 @@ export default function TypingScreen() {
           },
         ]}
       >
-        <View style={styles.header}>
+        <View 
+          style={styles.header}
+          onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+        >
           <View style={styles.headerButtonGroup}>
             <Pressable
               onPress={handleOpenDocuments}
@@ -385,7 +393,7 @@ export default function TypingScreen() {
           style={[
             styles.typingArea,
             {
-              height: height * 0.25 - 60,
+              height: typingAreaHeight,
               backgroundColor: theme.typingAreaBg,
               borderColor: theme.typingAreaBorder,
             },
@@ -410,7 +418,7 @@ export default function TypingScreen() {
           </ScrollView>
         </View>
 
-        <View style={styles.keyboardContainer}>
+        <View style={{ height: keyboardAreaHeight }}>
           {mode === "keyboard" ? (
             <>
               <View style={styles.suggestionsContainer}>
@@ -551,9 +559,6 @@ const styles = StyleSheet.create({
   typingText: {
     fontSize: Typography.typing.fontSize,
     fontWeight: Typography.typing.fontWeight,
-  },
-  keyboardContainer: {
-    flex: 1,
   },
   suggestionsContainer: {
     height: 50,
