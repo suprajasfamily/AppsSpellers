@@ -8,14 +8,12 @@ import {
   Alert,
   useWindowDimensions,
   ActivityIndicator,
-  Modal,
-  FlatList,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics"
+import * as Haptics from "expo-haptics";
 import * as Speech from "expo-speech";
 import { ThemedView } from "@/components/ThemedView";
 import { CustomKeyboard } from "@/components/CustomKeyboard";
@@ -26,22 +24,15 @@ import { usePreferences, AppMode } from "@/contexts/PreferencesContext";
 import { getSuggestions } from "@/lib/wordSuggestions";
 import { evaluateExpression } from "@/lib/calculator";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
-import { Spacing, BorderRadius, Typography, Fonts } from "@/constants/theme";
+import { Spacing, BorderRadius, Typography, TypingAreaSizes, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-
-const KEYBOARD_HEIGHT_RATIO = 0.75;
-
-interface DriveDocument {
-  id: string;
-  name: string;
-  modifiedTime: string;
-}
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Typing">;
 
 export default function TypingScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const { typingAreaSize } = usePreferences();
   const navigation = useNavigation<NavigationProp>();
   const { height } = useWindowDimensions();
 
@@ -51,12 +42,6 @@ export default function TypingScreen() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSavingToDrive, setIsSavingToDrive] = useState(false);
   const [driveConnected, setDriveConnected] = useState(false);
-  const [documentsModalVisible, setDocumentsModalVisible] = useState(false);
-  const [documents, setDocuments] = useState<DriveDocument[]>([]);
-  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
-  const [isLoadingDocument, setIsLoadingDocument] = useState(false);
-  
-  const keyboardHeight = height * KEYBOARD_HEIGHT_RATIO;
 
   useEffect(() => {
     return () => {
@@ -77,49 +62,7 @@ export default function TypingScreen() {
     checkDriveConnection();
   }, []);
 
-  const loadDocumentsList = useCallback(async () => {
-    setIsLoadingDocuments(true);
-    try {
-      const response = await fetch(new URL('/api/google-drive/list', getApiUrl()).toString());
-      if (!response.ok) {
-        throw new Error('Failed to fetch documents');
-      }
-      const data = await response.json();
-      setDocuments(data.files || []);
-    } catch {
-      Alert.alert("Error", "Could not load documents from Google Drive.");
-    } finally {
-      setIsLoadingDocuments(false);
-    }
-  }, []);
-
-  const handleOpenDocuments = useCallback(() => {
-    if (!driveConnected) {
-      Alert.alert("Not Connected", "Connect Google Drive in Settings first.");
-      return;
-    }
-    setDocumentsModalVisible(true);
-    loadDocumentsList();
-  }, [driveConnected, loadDocumentsList]);
-
-  const handleLoadDocument = useCallback(async (fileId: string) => {
-    setIsLoadingDocument(true);
-    try {
-      const response = await fetch(new URL(`/api/google-drive/file/${fileId}`, getApiUrl()).toString());
-      if (!response.ok) {
-        throw new Error('Failed to load document');
-      }
-      const data = await response.json();
-      setText(data.content || '');
-      setSuggestions(getSuggestions(data.content || ''));
-      setDocumentsModalVisible(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {
-      Alert.alert("Error", "Could not load the document.");
-    } finally {
-      setIsLoadingDocument(false);
-    }
-  }, []);
+  const typingHeight = height * TypingAreaSizes[typingAreaSize];
 
   const updateSuggestions = useCallback((newText: string) => {
     const newSuggestions = getSuggestions(newText);
@@ -282,11 +225,11 @@ export default function TypingScreen() {
         <View style={styles.header}>
           <View style={styles.headerButtonGroup}>
             <Pressable
-              onPress={handleOpenDocuments}
+              onPress={handleClear}
               style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary }]}
-              accessibilityLabel="Open document"
+              accessibilityLabel="Clear text"
             >
-              <Feather name="folder" size={20} color={theme.text} />
+              <Feather name="trash-2" size={20} color={theme.text} />
             </Pressable>
             <Pressable
               onPress={handleReadAloud}
@@ -297,13 +240,6 @@ export default function TypingScreen() {
               accessibilityLabel={isSpeaking ? "Stop reading" : "Read aloud"}
             >
               <Feather name={isSpeaking ? "stop-circle" : "volume-2"} size={20} color={isSpeaking ? "#FFFFFF" : theme.text} />
-            </Pressable>
-            <Pressable
-              onPress={handleClear}
-              style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary, marginLeft: Spacing.xs }]}
-              accessibilityLabel="Clear text"
-            >
-              <Feather name="trash-2" size={20} color={theme.text} />
             </Pressable>
             {driveConnected ? (
               <Pressable
@@ -388,7 +324,7 @@ export default function TypingScreen() {
           style={[
             styles.typingArea,
             {
-              flex: 1,
+              height: typingHeight,
               backgroundColor: theme.typingAreaBg,
               borderColor: theme.typingAreaBorder,
             },
@@ -413,85 +349,40 @@ export default function TypingScreen() {
           </ScrollView>
         </View>
 
-        <View style={{ height: keyboardHeight }}>
-          {mode === "keyboard" ? (
-            <>
-              <View style={styles.suggestionsContainer}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.suggestionsScroll}
-                >
-                  {suggestions.map((word, index) => (
-                    <SuggestionPill
-                      key={`${word}-${index}`}
-                      word={word}
-                      onPress={handleSuggestionPress}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
+        {mode === "keyboard" ? (
+          <>
+            <View style={styles.suggestionsContainer}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.suggestionsScroll}
+              >
+                {suggestions.map((word, index) => (
+                  <SuggestionPill
+                    key={`${word}-${index}`}
+                    word={word}
+                    onPress={handleSuggestionPress}
+                  />
+                ))}
+              </ScrollView>
+            </View>
 
-              <CustomKeyboard
-                onKeyPress={handleKeyPress}
-                onBackspace={handleBackspace}
-                onSpace={handleSpace}
-                onEnter={handleEnter}
-              />
-            </>
-          ) : (
-            <Calculator
-                onCharacter={handleCalculatorCharacter}
-                onBackspace={handleBackspace}
-                onClear={handleCalculatorClear}
-                onEvaluate={handleCalculatorEvaluate}
-              />
-          )}
-        </View>
+            <CustomKeyboard
+              onKeyPress={handleKeyPress}
+              onBackspace={handleBackspace}
+              onSpace={handleSpace}
+              onEnter={handleEnter}
+            />
+          </>
+        ) : (
+          <Calculator
+              onCharacter={handleCalculatorCharacter}
+              onBackspace={handleBackspace}
+              onClear={handleCalculatorClear}
+              onEvaluate={handleCalculatorEvaluate}
+            />
+        )}
       </View>
-
-      <Modal
-        visible={documentsModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDocumentsModalVisible(false)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setDocumentsModalVisible(false)}>
-          <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Your Documents</Text>
-            {isLoadingDocuments ? (
-              <ActivityIndicator size="large" color={theme.primary} />
-            ) : documents.length === 0 ? (
-              <Text style={[styles.emptyText, { color: theme.tabIconDefault }]}>
-                No documents saved yet.
-              </Text>
-            ) : (
-              <FlatList
-                data={documents}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <Pressable
-                    onPress={() => handleLoadDocument(item.id)}
-                    disabled={isLoadingDocument}
-                    style={[styles.documentItem, { backgroundColor: theme.backgroundSecondary }]}
-                  >
-                    <Text style={[styles.documentName, { color: theme.text }]}>{item.name}</Text>
-                    <Text style={[styles.documentDate, { color: theme.tabIconDefault }]}>
-                      {new Date(item.modifiedTime).toLocaleDateString()}
-                    </Text>
-                  </Pressable>
-                )}
-              />
-            )}
-            <Pressable
-              onPress={() => setDocumentsModalVisible(false)}
-              style={[styles.closeButton, { backgroundColor: theme.backgroundSecondary }]}
-            >
-              <Text style={[styles.closeButtonText, { color: theme.text }]}>Close</Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Modal>
     </ThemedView>
   );
 }
@@ -562,51 +453,5 @@ const styles = StyleSheet.create({
   suggestionsScroll: {
     alignItems: "center",
     paddingHorizontal: Spacing.xs,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    width: "85%",
-    maxHeight: "60%",
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-  },
-  modalTitle: {
-    fontSize: Typography.h4.fontSize,
-    fontWeight: "600",
-    marginBottom: Spacing.md,
-  },
-  documentItem: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-    marginBottom: Spacing.xs,
-  },
-  documentName: {
-    fontSize: Typography.body.fontSize,
-    fontWeight: "500",
-  },
-  documentDate: {
-    fontSize: Typography.small.fontSize,
-    marginTop: 2,
-  },
-  emptyText: {
-    textAlign: "center",
-    fontSize: Typography.body.fontSize,
-    marginTop: Spacing.lg,
-  },
-  closeButton: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-    alignItems: "center",
-  },
-  closeButtonText: {
-    fontSize: Typography.body.fontSize,
-    fontWeight: "600",
   },
 });

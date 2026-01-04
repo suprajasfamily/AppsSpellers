@@ -62,9 +62,9 @@ function getIndexFromRowAndCol(row: number, col: number, rowSizes: number[]): nu
 }
 
 const KEY_SIZE_MULTIPLIERS: Record<KeySize, number> = {
-  small: 0.92,
+  small: 0.85,
   medium: 1.0,
-  large: 1.06,
+  large: 1.12,
 };
 
 interface DraggableKeyProps {
@@ -81,7 +81,6 @@ interface DraggableKeyProps {
   keySize: KeySize;
   isSpecialKey: boolean;
   keyMargin: { horizontal: number; vertical: number };
-  isAbcLayout: boolean;
 }
 
 function DraggableKey({
@@ -98,7 +97,6 @@ function DraggableKey({
   keySize,
   isSpecialKey,
   keyMargin,
-  isAbcLayout,
 }: DraggableKeyProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -109,16 +107,6 @@ function DraggableKey({
 
   const sizeMultiplier = KEY_SIZE_MULTIPLIERS[keySize];
   const keyWidth = baseKeyWidth * sizeMultiplier;
-  
-  const getKeyWidth = () => {
-    if (keyLabel === SPECIAL_KEYS.SPACE) {
-      if (isAbcLayout) {
-        return baseKeyWidth * 1.5;
-      }
-      return baseKeyWidth * 2;
-    }
-    return keyWidth;
-  };
 
   const handleDragEnd = useCallback((fromIdx: number, deltaX: number, deltaY: number) => {
     const keyHeight = 52;
@@ -215,7 +203,7 @@ function DraggableKey({
           {
             backgroundColor: buttonColor,
             borderColor: theme.keyBorder,
-            width: getKeyWidth(),
+            width: keyLabel === SPECIAL_KEYS.SPACE ? keyWidth * 2.5 : keyWidth,
             minHeight: 44 * sizeMultiplier,
             marginHorizontal: keyMargin.horizontal,
             marginVertical: keyMargin.vertical,
@@ -311,11 +299,11 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   const layout = useMemo(() => chunkArray(customKeys, rowSizes), [customKeys, rowSizes]);
 
   const keyboardHeight = height * KeyboardSizes[keyboardSize];
+  const maxKeysInRow = Math.max(...rowSizes);
   const spacing = KEY_SPACING_VALUES[keySpacing];
-  const availableWidth = width - Spacing.lg * 2;
   const baseKeyWidth = keyboardLayout === "abc" 
-    ? (availableWidth - 5 * (spacing.horizontal * 2)) / 5
-    : (availableWidth - 10 * (spacing.horizontal * 2)) / 10;
+    ? (width - Spacing.lg * 2 - 5 * (spacing.horizontal * 2)) / 5
+    : (width - Spacing.lg * 2 - maxKeysInRow * (spacing.horizontal * 2)) / maxKeysInRow;
 
   const toggleLayout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -451,7 +439,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
                   keySize={getKeySize(keyboardLayout, key)}
                   isSpecialKey={isSpecial}
                   keyMargin={spacing}
-                  isAbcLayout={keyboardLayout === "abc"}
                 />
               );
             })}
