@@ -1,9 +1,30 @@
 import type { Express } from "express";
 import { createServer, type Server } from "node:http";
+import { createOrUpdateTypeBuddyDocument, checkGoogleDriveConnection } from "./lib/googleDrive";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  app.get("/api/google-drive/status", async (_req, res) => {
+    try {
+      const connected = await checkGoogleDriveConnection();
+      res.json({ connected });
+    } catch (error) {
+      res.json({ connected: false });
+    }
+  });
+
+  app.post("/api/google-drive/save", async (req, res) => {
+    try {
+      const { content } = req.body;
+      if (typeof content !== "string") {
+        return res.status(400).json({ error: "Content must be a string" });
+      }
+      const result = await createOrUpdateTypeBuddyDocument(content);
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      console.error("Google Drive save error:", error);
+      res.status(500).json({ error: error.message || "Failed to save to Google Drive" });
+    }
+  });
 
   const httpServer = createServer(app);
 
