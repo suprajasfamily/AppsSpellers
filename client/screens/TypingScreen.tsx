@@ -47,11 +47,8 @@ export default function TypingScreen() {
     if (currentText.length === 0) return true;
     const trimmed = currentText.trimEnd();
     if (trimmed.length === 0) return true;
-    const lastChar = trimmed[trimmed.length - 1];
-    if (lastChar === '.' || lastChar === '?' || lastChar === '!') {
-      const afterPunctuation = currentText.slice(trimmed.length);
-      return afterPunctuation.length > 0 || currentText.endsWith(' ');
-    }
+    const lastNonSpace = trimmed[trimmed.length - 1];
+    if (lastNonSpace === '.' || lastNonSpace === '?' || lastNonSpace === '!') return true;
     if (currentText.endsWith('\n')) return true;
     return false;
   }, []);

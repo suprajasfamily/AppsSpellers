@@ -61,9 +61,9 @@ function getIndexFromRowAndCol(row: number, col: number, rowSizes: number[]): nu
 }
 
 const KEY_SIZE_MULTIPLIERS: Record<KeySize, number> = {
-  small: 0.8,
+  small: 0.85,
   medium: 1.0,
-  large: 1.3,
+  large: 1.12,
 };
 
 interface DraggableKeyProps {
