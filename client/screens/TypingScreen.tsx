@@ -21,6 +21,7 @@ import { SuggestionPill } from "@/components/SuggestionPill";
 import { useTheme } from "@/hooks/useTheme";
 import { usePreferences, AppMode } from "@/contexts/PreferencesContext";
 import { getSuggestions } from "@/lib/wordSuggestions";
+import { evaluateExpression } from "@/lib/calculator";
 import { Spacing, BorderRadius, Typography, TypingAreaSizes, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -121,8 +122,33 @@ export default function TypingScreen() {
     );
   }, []);
 
-  const handleCalculatorResult = useCallback((result: string) => {
-    setText(text + result + " ");
+  const handleCalculatorCharacter = useCallback((char: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const newText = text + char;
+    setText(newText);
+  }, [text]);
+
+  const handleCalculatorClear = useCallback(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    setText("");
+    setSuggestions(["I", "The", "My", "A", "We"]);
+  }, []);
+
+  const handleCalculatorEvaluate = useCallback(() => {
+    const expressionMatch = text.match(/[\d\s+\-×÷*/().^√sinctanlogπ]+$/);
+    if (!expressionMatch) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    const expression = expressionMatch[0].trim();
+    const result = evaluateExpression(expression);
+    if (result === "Error") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const beforeExpression = text.slice(0, text.length - expressionMatch[0].length);
+    setText(beforeExpression + result + " ");
   }, [text]);
 
   const handleReadAloud = useCallback(async () => {
@@ -292,7 +318,12 @@ export default function TypingScreen() {
             />
           </>
         ) : (
-          <Calculator onResult={handleCalculatorResult} />
+          <Calculator
+              onCharacter={handleCalculatorCharacter}
+              onBackspace={handleBackspace}
+              onClear={handleCalculatorClear}
+              onEvaluate={handleCalculatorEvaluate}
+            />
         )}
       </View>
     </ThemedView>

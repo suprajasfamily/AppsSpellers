@@ -1,97 +1,82 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Text, useWindowDimensions, ScrollView } from "react-native";
+import React from "react";
+import { View, StyleSheet, useWindowDimensions } from "react-native";
 import { KeyButton } from "./KeyButton";
-import { useTheme } from "@/hooks/useTheme";
 import { usePreferences } from "@/contexts/PreferencesContext";
-import { Spacing, KeyboardSizes, BorderRadius, Typography, Fonts } from "@/constants/theme";
-import { evaluateExpression, calculatorButtons, scientificButtons } from "@/lib/calculator";
+import { Spacing, KeyboardSizes } from "@/constants/theme";
+
+const calculatorButtons = [
+  ["7", "8", "9", "÷"],
+  ["4", "5", "6", "×"],
+  ["1", "2", "3", "-"],
+  ["0", ".", "=", "+"],
+];
+
+const scientificButtons = [
+  ["(", ")", "^", "√"],
+  ["sin", "cos", "tan", "π"],
+];
+
+const controlButtons = ["C", "DEL"];
 
 interface CalculatorProps {
-  onResult?: (result: string) => void;
+  onCharacter: (char: string) => void;
+  onBackspace: () => void;
+  onClear: () => void;
+  onEvaluate: () => void;
 }
 
-export function Calculator({ onResult }: CalculatorProps) {
-  const { theme } = useTheme();
+export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate }: CalculatorProps) {
   const { keyboardSize } = usePreferences();
   const { width, height } = useWindowDimensions();
-  const [expression, setExpression] = useState("");
-  const [result, setResult] = useState("");
 
   const keyboardHeight = height * KeyboardSizes[keyboardSize];
-  const buttonWidth = (width - Spacing.lg * 2 - 4 * 8) / 4;
+  const numColumns = 4;
+  const buttonWidth = (width - Spacing.md * 2 - (numColumns - 1) * Spacing.xs) / numColumns;
+  const buttonHeight = (keyboardHeight - Spacing.md * 3) / 7;
 
   const handleButtonPress = (btn: string) => {
     switch (btn) {
       case "C":
-        setExpression("");
-        setResult("");
+        onClear();
         break;
       case "DEL":
-        if (expression.length > 0) {
-          const funcs = ["sin(", "cos(", "tan(", "log(", "ln(", "√("];
-          for (const func of funcs) {
-            if (expression.endsWith(func)) {
-              setExpression(expression.slice(0, -func.length));
-              return;
-            }
-          }
-          setExpression(expression.slice(0, -1));
-        }
+        onBackspace();
         break;
       case "=":
-        const evalResult = evaluateExpression(expression);
-        setResult(evalResult);
-        if (onResult && evalResult !== "Error") {
-          onResult(evalResult);
-        }
+        onEvaluate();
         break;
       case "sin":
       case "cos":
       case "tan":
-      case "log":
-      case "ln":
-        setExpression(expression + btn + "(");
+        onCharacter(btn + "(");
         break;
       case "√":
-        setExpression(expression + "√(");
+        onCharacter("√(");
+        break;
+      case "π":
+        onCharacter("3.14159");
         break;
       default:
-        setExpression(expression + btn);
+        onCharacter(btn);
     }
   };
 
   return (
     <View style={[styles.container, { height: keyboardHeight }]}>
-      <View style={[styles.display, { backgroundColor: theme.backgroundSecondary, borderColor: theme.keyBorder }]}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.expressionContainer}
-        >
-          <Text
-            style={[
-              styles.expression,
-              { color: theme.text, fontFamily: Fonts?.mono || "monospace" },
-            ]}
-            numberOfLines={1}
-          >
-            {expression || "0"}
-          </Text>
-        </ScrollView>
-        {result ? (
-          <Text
-            style={[
-              styles.result,
-              { color: theme.primary, fontFamily: Fonts?.mono || "monospace" },
-            ]}
-            numberOfLines={1}
-          >
-            = {result}
-          </Text>
-        ) : null}
+      <View style={styles.controlRow}>
+        {controlButtons.map((btn) => (
+          <KeyButton
+            key={btn}
+            label={btn}
+            onPress={() => handleButtonPress(btn)}
+            width={(width - Spacing.md * 2 - Spacing.xs) / 2}
+            height={buttonHeight}
+            isSpecial
+          />
+        ))}
       </View>
 
-      <View style={styles.scientificRow}>
+      <View style={styles.scientificSection}>
         {scientificButtons.map((row, rowIndex) => (
           <View key={rowIndex} style={styles.row}>
             {row.map((btn) => (
@@ -100,14 +85,15 @@ export function Calculator({ onResult }: CalculatorProps) {
                 label={btn}
                 onPress={() => handleButtonPress(btn)}
                 width={buttonWidth}
-                fontSize={16}
+                height={buttonHeight}
+                fontSize={14}
               />
             ))}
           </View>
         ))}
       </View>
 
-      <View style={styles.keysContainer}>
+      <View style={styles.mainSection}>
         {calculatorButtons.map((row, rowIndex) => (
           <View key={rowIndex} style={styles.row}>
             {row.map((btn) => (
@@ -116,7 +102,8 @@ export function Calculator({ onResult }: CalculatorProps) {
                 label={btn}
                 onPress={() => handleButtonPress(btn)}
                 width={buttonWidth}
-                isSpecial={btn === "C" || btn === "=" || btn === "DEL"}
+                height={buttonHeight}
+                isSpecial={btn === "="}
               />
             ))}
           </View>
@@ -128,41 +115,25 @@ export function Calculator({ onResult }: CalculatorProps) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.sm,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
-  display: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-    marginBottom: Spacing.sm,
-    minHeight: 70,
+  controlRow: {
+    flexDirection: "row",
     justifyContent: "center",
-  },
-  expressionContainer: {
-    alignItems: "flex-end",
-  },
-  expression: {
-    fontSize: Typography.calculator.fontSize,
-    fontWeight: Typography.calculator.fontWeight,
-    textAlign: "right",
-  },
-  result: {
-    fontSize: Typography.h4.fontSize,
-    fontWeight: "600",
-    textAlign: "right",
-    marginTop: Spacing.xs,
-  },
-  scientificRow: {
+    gap: Spacing.xs,
     marginBottom: Spacing.xs,
   },
-  keysContainer: {
+  scientificSection: {
+    marginBottom: Spacing.xs,
+  },
+  mainSection: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "space-evenly",
   },
   row: {
     flexDirection: "row",
     justifyContent: "center",
-    marginVertical: 2,
+    gap: Spacing.xs,
   },
 });

@@ -10,10 +10,11 @@ import { useTheme } from "@/hooks/useTheme";
 import { usePreferences } from "@/contexts/PreferencesContext";
 import { BorderRadius, Spacing, Typography, Fonts } from "@/constants/theme";
 
-interface KeyButtonProps {
+export interface KeyButtonProps {
   label: string;
   onPress: () => void;
   width?: number | string;
+  height?: number;
   isSpecial?: boolean;
   fontSize?: number;
   useCustomColor?: boolean;
@@ -25,6 +26,7 @@ export function KeyButton({
   label,
   onPress,
   width,
+  height,
   isSpecial = false,
   fontSize,
   useCustomColor = true,
@@ -67,6 +69,7 @@ export function KeyButton({
           backgroundColor,
           borderColor: theme.keyBorder,
           width: width || "auto",
+          height: height,
         },
       ]}
       accessibilityLabel={`${label} button`}
