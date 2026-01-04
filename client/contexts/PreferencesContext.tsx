@@ -117,8 +117,8 @@ const defaultPreferences: Preferences = {
     qwerty: {},
   },
   voiceSettings: {
-    rate: 0.8,
-    pitch: 1.0,
+    rate: 0.95,
+    pitch: 0.95,
     voiceId: null,
   },
   isLoading: true,
