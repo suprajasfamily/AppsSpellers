@@ -29,6 +29,7 @@ import { apiRequest, getApiUrl } from "@/lib/query-client";
 import { Spacing, BorderRadius, Typography, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
+const KEYBOARD_HEIGHT_RATIO = 0.75;
 
 interface DriveDocument {
   id: string;
@@ -54,11 +55,8 @@ export default function TypingScreen() {
   const [documents, setDocuments] = useState<DriveDocument[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const [isLoadingDocument, setIsLoadingDocument] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(50);
-
-  const availableHeight = height - insets.top - insets.bottom - headerHeight - Spacing.md - Spacing.sm;
-  const typingAreaHeight = availableHeight * 0.25;
-  const keyboardAreaHeight = availableHeight * 0.75;
+  
+  const keyboardHeight = height * KEYBOARD_HEIGHT_RATIO;
 
   useEffect(() => {
     return () => {
@@ -281,10 +279,7 @@ export default function TypingScreen() {
           },
         ]}
       >
-        <View 
-          style={styles.header}
-          onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
-        >
+        <View style={styles.header}>
           <View style={styles.headerButtonGroup}>
             <Pressable
               onPress={handleOpenDocuments}
@@ -393,7 +388,7 @@ export default function TypingScreen() {
           style={[
             styles.typingArea,
             {
-              height: typingAreaHeight,
+              flex: 1,
               backgroundColor: theme.typingAreaBg,
               borderColor: theme.typingAreaBorder,
             },
@@ -418,7 +413,7 @@ export default function TypingScreen() {
           </ScrollView>
         </View>
 
-        <View style={{ height: keyboardAreaHeight }}>
+        <View style={{ height: keyboardHeight }}>
           {mode === "keyboard" ? (
             <>
               <View style={styles.suggestionsContainer}>
@@ -561,7 +556,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.typing.fontWeight,
   },
   suggestionsContainer: {
-    height: 44,
+    height: 50,
     marginBottom: 0,
   },
   suggestionsScroll: {

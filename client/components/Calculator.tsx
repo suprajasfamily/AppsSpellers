@@ -1,7 +1,8 @@
 import React from "react";
 import { View, StyleSheet, useWindowDimensions } from "react-native";
 import { KeyButton } from "./KeyButton";
-import { Spacing } from "@/constants/theme";
+import { usePreferences } from "@/contexts/PreferencesContext";
+import { Spacing, KeyboardSizes } from "@/constants/theme";
 
 const calculatorButtons = [
   ["7", "8", "9", "÷"],
@@ -25,9 +26,13 @@ interface CalculatorProps {
 }
 
 export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate }: CalculatorProps) {
-  const { width } = useWindowDimensions();
+  const { keyboardSize } = usePreferences();
+  const { width, height } = useWindowDimensions();
+
+  const keyboardHeight = height * KeyboardSizes[keyboardSize];
   const numColumns = 4;
   const buttonWidth = (width - Spacing.md * 2 - (numColumns - 1) * Spacing.xs) / numColumns;
+  const buttonHeight = (keyboardHeight - Spacing.md * 3) / 7;
 
   const handleButtonPress = (btn: string) => {
     switch (btn) {
@@ -57,7 +62,7 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate }: Ca
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height: keyboardHeight }]}>
       <View style={styles.controlRow}>
         {controlButtons.map((btn) => (
           <KeyButton
@@ -65,7 +70,7 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate }: Ca
             label={btn}
             onPress={() => handleButtonPress(btn)}
             width={(width - Spacing.md * 2 - Spacing.xs) / 2}
-            height={50}
+            height={buttonHeight}
             isSpecial
           />
         ))}
@@ -80,7 +85,7 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate }: Ca
                 label={btn}
                 onPress={() => handleButtonPress(btn)}
                 width={buttonWidth}
-                height={50}
+                height={buttonHeight}
                 fontSize={14}
               />
             ))}
@@ -97,7 +102,7 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate }: Ca
                 label={btn}
                 onPress={() => handleButtonPress(btn)}
                 width={buttonWidth}
-                height={50}
+                height={buttonHeight}
                 isSpecial={btn === "="}
               />
             ))}
@@ -110,7 +115,6 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate }: Ca
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
