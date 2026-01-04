@@ -7,6 +7,7 @@ import {
   Pressable,
   Alert,
   useWindowDimensions,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -22,6 +23,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { usePreferences, AppMode } from "@/contexts/PreferencesContext";
 import { getSuggestions } from "@/lib/wordSuggestions";
 import { evaluateExpression } from "@/lib/calculator";
+import { apiRequest, getApiUrl } from "@/lib/query-client";
 import { Spacing, BorderRadius, Typography, TypingAreaSizes, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -38,11 +40,26 @@ export default function TypingScreen() {
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>(["I", "The", "My", "A", "We"]);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isSavingToDrive, setIsSavingToDrive] = useState(false);
+  const [driveConnected, setDriveConnected] = useState(false);
 
   useEffect(() => {
     return () => {
       Speech.stop();
     };
+  }, []);
+
+  useEffect(() => {
+    const checkDriveConnection = async () => {
+      try {
+        const response = await fetch(new URL('/api/google-drive/status', getApiUrl()).toString());
+        const data = await response.json();
+        setDriveConnected(data.connected);
+      } catch {
+        setDriveConnected(false);
+      }
+    };
+    checkDriveConnection();
   }, []);
 
   const typingHeight = height * TypingAreaSizes[typingAreaSize];
@@ -171,6 +188,29 @@ export default function TypingScreen() {
     });
   }, [text, isSpeaking]);
 
+  const handleSaveToDrive = useCallback(async () => {
+    if (!text.trim()) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Alert.alert("Nothing to Save", "Type some text first to save to Google Drive.");
+      return;
+    }
+    setIsSavingToDrive(true);
+    try {
+      const response = await apiRequest("POST", "/api/google-drive/save", { content: text });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Save failed with status ${response.status}`);
+      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("Saved to Google Drive", "Your notes have been saved to 'TypeBuddy Notes' in your Google Drive.");
+    } catch (error: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("Save Failed", error.message || "Could not save to Google Drive.");
+    } finally {
+      setIsSavingToDrive(false);
+    }
+  }, [text]);
+
   return (
     <ThemedView style={styles.container}>
       <View
@@ -201,6 +241,23 @@ export default function TypingScreen() {
             >
               <Feather name={isSpeaking ? "stop-circle" : "volume-2"} size={20} color={isSpeaking ? "#FFFFFF" : theme.text} />
             </Pressable>
+            {driveConnected ? (
+              <Pressable
+                onPress={handleSaveToDrive}
+                disabled={isSavingToDrive}
+                style={[
+                  styles.headerButton,
+                  { backgroundColor: theme.backgroundSecondary, marginLeft: Spacing.xs },
+                ]}
+                accessibilityLabel="Save to Google Drive"
+              >
+                {isSavingToDrive ? (
+                  <ActivityIndicator size="small" color={theme.text} />
+                ) : (
+                  <Feather name="upload-cloud" size={20} color={theme.text} />
+                )}
+              </Pressable>
+            ) : null}
           </View>
 
           <View style={styles.modeToggle}>
