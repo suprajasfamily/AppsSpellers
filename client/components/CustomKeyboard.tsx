@@ -301,7 +301,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
     getKeySize,
     setKeySize,
   } = usePreferences();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [sizeModalVisible, setSizeModalVisible] = useState(false);
   const [selectedKeyForSize, setSelectedKeyForSize] = useState<string | null>(null);
@@ -310,6 +310,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   const rowSizes = keyboardLayout === "abc" ? ABC_ROW_SIZES : QWERTY_ROW_SIZES;
   const layout = useMemo(() => chunkArray(customKeys, rowSizes), [customKeys, rowSizes]);
 
+  const keyboardHeight = height * KeyboardSizes[keyboardSize];
   const spacing = KEY_SPACING_VALUES[keySpacing];
   const availableWidth = width - Spacing.lg * 2;
   const baseKeyWidth = keyboardLayout === "abc" 
@@ -365,7 +366,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   let keyIndex = 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height: keyboardHeight }]}>
       <View style={styles.topBar}>
         <View style={styles.leftButtons}>
           <Pressable
@@ -475,7 +476,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     paddingHorizontal: Spacing.sm,
     paddingBottom: Spacing.sm,
   },
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   },
   keysContainer: {
     flex: 1,
-    justifyContent: "space-evenly",
+    justifyContent: "center",
   },
   row: {
     flexDirection: "row",
