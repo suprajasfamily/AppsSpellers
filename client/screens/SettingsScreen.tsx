@@ -34,16 +34,16 @@ interface VoicePreset {
 }
 
 const VOICE_PRESETS: VoicePreset[] = [
-  { id: "us-male-1", label: "American Man 1", description: "Deep voice", pitch: 0.85, rate: 0.9 },
-  { id: "us-male-2", label: "American Man 2", description: "Standard voice", pitch: 0.95, rate: 0.95 },
-  { id: "us-female-1", label: "American Woman 1", description: "Warm voice", pitch: 1.15, rate: 0.9 },
-  { id: "us-female-2", label: "American Woman 2", description: "Bright voice", pitch: 1.25, rate: 0.95 },
-  { id: "es-male", label: "Spanish Man", description: "Spanish accent", pitch: 0.9, rate: 0.85 },
-  { id: "es-female", label: "Spanish Woman", description: "Spanish accent", pitch: 1.2, rate: 0.85 },
-  { id: "uk-male", label: "British Man", description: "British accent", pitch: 0.88, rate: 0.88 },
-  { id: "uk-female", label: "British Woman", description: "British accent", pitch: 1.18, rate: 0.88 },
-  { id: "in-male", label: "Indian Man", description: "Indian accent", pitch: 0.92, rate: 0.82 },
-  { id: "in-female", label: "Indian Woman", description: "Indian accent", pitch: 1.22, rate: 0.82 },
+  { id: "deep-slow", label: "Deep & Slow", description: "Very deep voice", pitch: 0.5, rate: 0.7 },
+  { id: "deep-normal", label: "Deep Voice", description: "Low pitch", pitch: 0.6, rate: 0.9 },
+  { id: "male-standard", label: "Standard Male", description: "Normal male", pitch: 0.8, rate: 1.0 },
+  { id: "neutral", label: "Neutral", description: "Balanced voice", pitch: 1.0, rate: 1.0 },
+  { id: "female-standard", label: "Standard Female", description: "Normal female", pitch: 1.3, rate: 1.0 },
+  { id: "high-voice", label: "High Voice", description: "Higher pitch", pitch: 1.5, rate: 0.95 },
+  { id: "slow-clear", label: "Slow & Clear", description: "Easy to follow", pitch: 1.0, rate: 0.6 },
+  { id: "fast-reader", label: "Fast Reader", description: "Quick reading", pitch: 1.0, rate: 1.5 },
+  { id: "chipmunk", label: "Chipmunk", description: "Very high & fast", pitch: 2.0, rate: 1.3 },
+  { id: "giant", label: "Giant", description: "Very deep & slow", pitch: 0.4, rate: 0.5 },
 ];
 
 const avatars = [

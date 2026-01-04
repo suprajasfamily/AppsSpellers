@@ -121,8 +121,8 @@ const defaultPreferences: Preferences = {
     qwerty: {},
   },
   voiceSettings: {
-    rate: 0.95,
-    pitch: 0.95,
+    rate: 1.0,
+    pitch: 1.0,
     voiceId: null,
   },
   metronomeVolume: 0.5,
