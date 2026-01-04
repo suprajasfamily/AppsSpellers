@@ -124,6 +124,7 @@ export default function SettingsScreen() {
     setDisplayName,
     setAvatarId,
     setButtonColorId,
+    resetCustomLayout,
   } = usePreferences();
 
   return (
@@ -224,6 +225,37 @@ export default function SettingsScreen() {
               selectedColorId={buttonColorId}
               onColorChange={setButtonColorId}
             />
+
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              Custom Key Arrangement
+            </Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault }]}>
+              Tap the Edit button on the keyboard to rearrange keys
+            </Text>
+            <View style={styles.resetButtonsRow}>
+              <Pressable
+                onPress={() => {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  resetCustomLayout("abc");
+                }}
+                style={[styles.resetButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.keyBorder }]}
+                accessibilityLabel="Reset ABC layout"
+              >
+                <Feather name="rotate-ccw" size={16} color={theme.text} />
+                <Text style={[styles.resetButtonText, { color: theme.text }]}>Reset ABC</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  resetCustomLayout("qwerty");
+                }}
+                style={[styles.resetButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.keyBorder }]}
+                accessibilityLabel="Reset QWERTY layout"
+              >
+                <Feather name="rotate-ccw" size={16} color={theme.text} />
+                <Text style={[styles.resetButtonText, { color: theme.text }]}>Reset QWERTY</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
 
@@ -332,5 +364,28 @@ const styles = StyleSheet.create({
   },
   aboutValue: {
     fontSize: Typography.body.fontSize,
+  },
+  helpText: {
+    fontSize: Typography.small.fontSize,
+    marginBottom: Spacing.md,
+  },
+  resetButtonsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  resetButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    gap: Spacing.xs,
+  },
+  resetButtonText: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "500",
   },
 });
