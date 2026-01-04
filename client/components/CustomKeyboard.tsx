@@ -367,31 +367,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
             </Text>
             <Feather name="refresh-cw" size={14} color={theme.text} style={styles.toggleIcon} />
           </Pressable>
-          {keyboardLayout === "abc" ? (
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onBackspace();
-              }}
-              style={[styles.deleteButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder }]}
-              accessibilityLabel="Delete"
-            >
-              <Feather name="delete" size={18} color={theme.text} />
-            </Pressable>
-          ) : null}
-        </View>
-
-        <View style={styles.customizeButtons}>
-          {isCustomizing ? (
-            <Pressable
-              onPress={handleReset}
-              style={[styles.toggleButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder, marginRight: Spacing.sm }]}
-              accessibilityLabel="Reset layout"
-            >
-              <Feather name="rotate-ccw" size={14} color={theme.text} />
-              <Text style={[styles.toggleText, { color: theme.text, marginLeft: 4 }]}>Reset</Text>
-            </Pressable>
-          ) : null}
           <Pressable
             onPress={toggleCustomize}
             style={[
@@ -408,6 +383,32 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
               {isCustomizing ? "Done" : "Edit"}
             </Text>
           </Pressable>
+        </View>
+
+        <View style={styles.customizeButtons}>
+          {isCustomizing ? (
+            <Pressable
+              onPress={handleReset}
+              style={[styles.toggleButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder, marginRight: Spacing.sm }]}
+              accessibilityLabel="Reset layout"
+            >
+              <Feather name="rotate-ccw" size={14} color={theme.text} />
+              <Text style={[styles.toggleText, { color: theme.text, marginLeft: 4 }]}>Reset</Text>
+            </Pressable>
+          ) : null}
+          {keyboardLayout === "abc" ? (
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onBackspace();
+              }}
+              style={[styles.deleteButtonLarge, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder }]}
+              accessibilityLabel="Delete"
+            >
+              <Feather name="delete" size={22} color={theme.text} />
+              <Text style={[styles.deleteButtonText, { color: theme.text }]}>Delete</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
 
@@ -482,11 +483,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  deleteButton: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+  deleteButtonLarge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
+    minWidth: 90,
+    justifyContent: "center",
+  },
+  deleteButtonText: {
+    fontSize: Typography.small.fontSize,
+    fontWeight: "600",
+    marginLeft: Spacing.xs,
   },
   toggleButton: {
     flexDirection: "row",

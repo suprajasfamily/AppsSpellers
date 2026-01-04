@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -25,11 +25,21 @@ import {
 } from "@/contexts/PreferencesContext";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 
-interface VoiceOption {
-  identifier: string;
-  name: string;
-  language: string;
+interface VoicePreset {
+  id: string;
+  label: string;
+  description: string;
+  pitch: number;
+  rate: number;
 }
+
+const VOICE_PRESETS: VoicePreset[] = [
+  { id: "boy-us", label: "American Boy", description: "Young boy voice", pitch: 1.3, rate: 0.85 },
+  { id: "girl-us", label: "American Girl", description: "Young girl voice", pitch: 1.4, rate: 0.85 },
+  { id: "boy-uk", label: "British Boy", description: "British accent", pitch: 1.25, rate: 0.8 },
+  { id: "girl-uk", label: "British Girl", description: "British accent", pitch: 1.35, rate: 0.8 },
+  { id: "adult", label: "Adult Voice", description: "Standard voice", pitch: 1.0, rate: 0.9 },
+];
 
 const avatars = [
   { id: "robot", source: require("../../assets/images/avatars/robot.png"), label: "Robot" },
@@ -141,28 +151,7 @@ export default function SettingsScreen() {
     resetCustomLayout,
   } = usePreferences();
 
-  const [availableVoices, setAvailableVoices] = useState<VoiceOption[]>([]);
   const [isTesting, setIsTesting] = useState(false);
-
-  useEffect(() => {
-    loadVoices();
-  }, []);
-
-  const loadVoices = async () => {
-    try {
-      const voices = await Speech.getAvailableVoicesAsync();
-      const englishVoices = voices
-        .filter(v => v.language.startsWith("en"))
-        .map(v => ({
-          identifier: v.identifier,
-          name: v.name || v.identifier,
-          language: v.language,
-        }));
-      setAvailableVoices(englishVoices);
-    } catch {
-      setAvailableVoices([]);
-    }
-  };
 
   const testVoice = () => {
     if (isTesting) {
@@ -331,120 +320,44 @@ export default function SettingsScreen() {
           <ThemedText style={styles.sectionTitle}>Voice Settings</ThemedText>
           
           <View style={[styles.card, { backgroundColor: theme.backgroundDefault }]}>
-            <Text style={[styles.label, { color: theme.text }]}>Speech Speed</Text>
-            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.sm }]}>
-              How fast the text is read aloud
+            <Text style={[styles.label, { color: theme.text }]}>Choose a Voice</Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.md }]}>
+              Select how the app reads text aloud
             </Text>
-            <View style={styles.sliderRow}>
-              <Text style={[styles.sliderLabel, { color: theme.tabIconDefault }]}>Slow</Text>
-              <View style={styles.sliderButtons}>
-                {[0.5, 0.7, 0.8, 1.0, 1.2].map((rate) => (
+            
+            <View style={styles.voicePresetGrid}>
+              {VOICE_PRESETS.map((preset) => {
+                const isSelected = voiceSettings.pitch === preset.pitch && voiceSettings.rate === preset.rate;
+                return (
                   <Pressable
-                    key={rate}
+                    key={preset.id}
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setVoiceSettings({ rate });
+                      setVoiceSettings({ pitch: preset.pitch, rate: preset.rate });
                     }}
                     style={[
-                      styles.sliderButton,
+                      styles.voicePresetButton,
                       { 
-                        backgroundColor: voiceSettings.rate === rate ? theme.primary : theme.backgroundSecondary,
-                        borderColor: theme.keyBorder,
+                        backgroundColor: isSelected ? theme.primary : theme.backgroundSecondary,
+                        borderColor: isSelected ? theme.primary : theme.keyBorder,
                       },
                     ]}
                   >
-                    <Text style={[styles.sliderButtonText, { color: voiceSettings.rate === rate ? "#FFFFFF" : theme.text }]}>
-                      {rate === 0.5 ? "0.5x" : rate === 0.7 ? "0.7x" : rate === 0.8 ? "0.8x" : rate === 1.0 ? "1x" : "1.2x"}
+                    <Feather 
+                      name={preset.id.includes("girl") ? "heart" : preset.id.includes("boy") ? "star" : "user"} 
+                      size={20} 
+                      color={isSelected ? "#FFFFFF" : theme.text} 
+                    />
+                    <Text style={[styles.voicePresetLabel, { color: isSelected ? "#FFFFFF" : theme.text }]}>
+                      {preset.label}
+                    </Text>
+                    <Text style={[styles.voicePresetDesc, { color: isSelected ? "#FFFFFF" : theme.tabIconDefault }]}>
+                      {preset.description}
                     </Text>
                   </Pressable>
-                ))}
-              </View>
-              <Text style={[styles.sliderLabel, { color: theme.tabIconDefault }]}>Fast</Text>
+                );
+              })}
             </View>
-
-            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>Voice Pitch</Text>
-            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.sm }]}>
-              Higher pitch sounds more child-like
-            </Text>
-            <View style={styles.sliderRow}>
-              <Text style={[styles.sliderLabel, { color: theme.tabIconDefault }]}>Low</Text>
-              <View style={styles.sliderButtons}>
-                {[0.8, 0.9, 1.0, 1.1, 1.2].map((pitch) => (
-                  <Pressable
-                    key={pitch}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setVoiceSettings({ pitch });
-                    }}
-                    style={[
-                      styles.sliderButton,
-                      { 
-                        backgroundColor: voiceSettings.pitch === pitch ? theme.primary : theme.backgroundSecondary,
-                        borderColor: theme.keyBorder,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.sliderButtonText, { color: voiceSettings.pitch === pitch ? "#FFFFFF" : theme.text }]}>
-                      {pitch === 1.0 ? "Normal" : pitch < 1.0 ? "Low" : "High"}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <Text style={[styles.sliderLabel, { color: theme.tabIconDefault }]}>High</Text>
-            </View>
-
-            {availableVoices.length > 0 ? (
-              <>
-                <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>Voice</Text>
-                <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.sm }]}>
-                  Choose a voice for reading text
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.voiceScrollView}>
-                  <View style={styles.voiceRow}>
-                    <Pressable
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setVoiceSettings({ voiceId: null });
-                      }}
-                      style={[
-                        styles.voiceButton,
-                        { 
-                          backgroundColor: voiceSettings.voiceId === null ? theme.primary : theme.backgroundSecondary,
-                          borderColor: theme.keyBorder,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.voiceButtonText, { color: voiceSettings.voiceId === null ? "#FFFFFF" : theme.text }]}>
-                        Default
-                      </Text>
-                    </Pressable>
-                    {availableVoices.slice(0, 6).map((voice) => (
-                      <Pressable
-                        key={voice.identifier}
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          setVoiceSettings({ voiceId: voice.identifier });
-                        }}
-                        style={[
-                          styles.voiceButton,
-                          { 
-                            backgroundColor: voiceSettings.voiceId === voice.identifier ? theme.primary : theme.backgroundSecondary,
-                            borderColor: theme.keyBorder,
-                          },
-                        ]}
-                      >
-                        <Text 
-                          style={[styles.voiceButtonText, { color: voiceSettings.voiceId === voice.identifier ? "#FFFFFF" : theme.text }]}
-                          numberOfLines={1}
-                        >
-                          {voice.name.split(" ")[0]}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </ScrollView>
-              </>
-            ) : null}
 
             <Pressable
               onPress={testVoice}
@@ -653,5 +566,29 @@ const styles = StyleSheet.create({
   testButtonText: {
     fontSize: Typography.body.fontSize,
     fontWeight: "500",
+  },
+  voicePresetGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  voicePresetButton: {
+    width: "48%",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 2,
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  voicePresetLabel: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  voicePresetDesc: {
+    fontSize: Typography.small.fontSize,
+    textAlign: "center",
   },
 });
