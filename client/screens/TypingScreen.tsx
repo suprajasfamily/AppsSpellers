@@ -32,7 +32,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Typing">;
 export default function TypingScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { typingAreaSize } = usePreferences();
+  const { typingAreaSize, voiceSettings } = usePreferences();
   const navigation = useNavigation<NavigationProp>();
   const { height } = useWindowDimensions();
 
@@ -181,12 +181,14 @@ export default function TypingScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsSpeaking(true);
     Speech.speak(text, {
-      rate: 0.85,
+      rate: voiceSettings.rate,
+      pitch: voiceSettings.pitch,
+      voice: voiceSettings.voiceId || undefined,
       onDone: () => setIsSpeaking(false),
       onStopped: () => setIsSpeaking(false),
       onError: () => setIsSpeaking(false),
     });
-  }, [text, isSpeaking]);
+  }, [text, isSpeaking, voiceSettings]);
 
   const handleSaveToDrive = useCallback(async () => {
     if (!text.trim()) {

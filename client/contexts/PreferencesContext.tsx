@@ -63,6 +63,12 @@ interface KeySizes {
   qwerty: KeySizeMap;
 }
 
+export interface VoiceSettings {
+  rate: number;
+  pitch: number;
+  voiceId: string | null;
+}
+
 interface Preferences {
   keyboardLayout: KeyboardLayout;
   keyboardSize: SizeOption;
@@ -73,6 +79,7 @@ interface Preferences {
   buttonColorId: string;
   customLayouts: CustomLayouts;
   keySizes: KeySizes;
+  voiceSettings: VoiceSettings;
   isLoading: boolean;
 }
 
@@ -90,6 +97,7 @@ interface PreferencesContextType extends Preferences {
   getCustomLayout: (layout: KeyboardLayout) => string[];
   setKeySize: (layout: KeyboardLayout, key: string, size: KeySize) => void;
   getKeySize: (layout: KeyboardLayout, key: string) => KeySize;
+  setVoiceSettings: (settings: Partial<VoiceSettings>) => void;
 }
 
 const defaultPreferences: Preferences = {
@@ -107,6 +115,11 @@ const defaultPreferences: Preferences = {
   keySizes: {
     abc: {},
     qwerty: {},
+  },
+  voiceSettings: {
+    rate: 0.8,
+    pitch: 1.0,
+    voiceId: null,
   },
   isLoading: true,
 };
@@ -215,6 +228,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     return preferences.keySizes[layout]?.[key] || "medium";
   };
 
+  const setVoiceSettings = (settings: Partial<VoiceSettings>) => {
+    const newVoiceSettings = {
+      ...preferences.voiceSettings,
+      ...settings,
+    };
+    savePreferences({ voiceSettings: newVoiceSettings });
+  };
+
   return (
     <PreferencesContext.Provider
       value={{
@@ -232,6 +253,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         getCustomLayout,
         setKeySize,
         getKeySize,
+        setVoiceSettings,
       }}
     >
       {children}
