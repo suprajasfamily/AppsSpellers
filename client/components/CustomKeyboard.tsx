@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { View, StyleSheet, useWindowDimensions, Pressable, Text } from "react-native";
+import { View, StyleSheet, useWindowDimensions, Pressable, Text, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -9,9 +9,15 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { KeyButton } from "./KeyButton";
 import { useTheme } from "@/hooks/useTheme";
-import { usePreferences, KeyboardLayout } from "@/contexts/PreferencesContext";
+import { 
+  usePreferences, 
+  KeyboardLayout, 
+  SPECIAL_KEYS, 
+  ABC_ROW_SIZES, 
+  QWERTY_ROW_SIZES,
+  KeySize,
+} from "@/contexts/PreferencesContext";
 import { Spacing, KeyboardSizes, BorderRadius, Typography } from "@/constants/theme";
 
 interface CustomKeyboardProps {
@@ -20,9 +26,6 @@ interface CustomKeyboardProps {
   onSpace: () => void;
   onEnter: () => void;
 }
-
-const ABC_ROW_SIZES = [5, 5, 5, 5, 6];
-const QWERTY_ROW_SIZES = [10, 9, 7];
 
 function chunkArray(array: string[], sizes: number[]): string[][] {
   const result: string[][] = [];
@@ -57,28 +60,40 @@ function getIndexFromRowAndCol(row: number, col: number, rowSizes: number[]): nu
   return index + clampedCol;
 }
 
+const KEY_SIZE_MULTIPLIERS: Record<KeySize, number> = {
+  small: 0.8,
+  medium: 1.0,
+  large: 1.3,
+};
+
 interface DraggableKeyProps {
   keyLabel: string;
   index: number;
-  keyWidth: number;
+  baseKeyWidth: number;
   isCustomizing: boolean;
   onSwap: (fromIndex: number, toIndex: number) => void;
   onPress: () => void;
+  onLongPressForSize?: () => void;
   totalKeys: number;
   getButtonColor: () => string;
   rowSizes: number[];
+  keySize: KeySize;
+  isSpecialKey: boolean;
 }
 
 function DraggableKey({
   keyLabel,
   index,
-  keyWidth,
+  baseKeyWidth,
   isCustomizing,
   onSwap,
   onPress,
+  onLongPressForSize,
   totalKeys,
   getButtonColor,
   rowSizes,
+  keySize,
+  isSpecialKey,
 }: DraggableKeyProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -87,9 +102,12 @@ function DraggableKey({
   const zIndex = useSharedValue(0);
   const [isDragging, setIsDragging] = useState(false);
 
+  const sizeMultiplier = KEY_SIZE_MULTIPLIERS[keySize];
+  const keyWidth = baseKeyWidth * sizeMultiplier;
+
   const handleDragEnd = useCallback((fromIdx: number, deltaX: number, deltaY: number) => {
     const keyHeight = 52;
-    const keyWidthWithMargin = keyWidth + 6;
+    const keyWidthWithMargin = baseKeyWidth + 6;
     
     const colOffset = Math.round(deltaX / keyWidthWithMargin);
     const rowOffset = Math.round(deltaY / keyHeight);
@@ -102,7 +120,7 @@ function DraggableKey({
     if (toIdx !== fromIdx && toIdx >= 0 && toIdx < totalKeys) {
       onSwap(fromIdx, toIdx);
     }
-  }, [keyWidth, onSwap, totalKeys, rowSizes]);
+  }, [baseKeyWidth, onSwap, totalKeys, rowSizes]);
 
   const longPressGesture = Gesture.LongPress()
     .minDuration(300)
@@ -112,6 +130,8 @@ function DraggableKey({
         scale.value = withSpring(1.15, { damping: 12, stiffness: 200 });
         runOnJS(setIsDragging)(true);
         runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
+      } else if (onLongPressForSize) {
+        runOnJS(onLongPressForSize)();
       }
     });
 
@@ -151,7 +171,21 @@ function DraggableKey({
     zIndex: zIndex.value,
   }));
 
-  const buttonColor = getButtonColor();
+  const buttonColor = isSpecialKey ? theme.specialKey : getButtonColor();
+  const textColor = isSpecialKey ? theme.text : "#FFFFFF";
+
+  const getKeyDisplay = () => {
+    switch (keyLabel) {
+      case SPECIAL_KEYS.SPACE:
+        return <Text style={[styles.keyText, { color: textColor }]}>space</Text>;
+      case SPECIAL_KEYS.ENTER:
+        return <Feather name="corner-down-left" size={20} color={textColor} />;
+      case SPECIAL_KEYS.DELETE:
+        return <Feather name="delete" size={20} color={textColor} />;
+      default:
+        return <Text style={[styles.keyText, { color: textColor }]}>{keyLabel}</Text>;
+    }
+  };
 
   return (
     <GestureDetector gesture={composedGesture}>
@@ -162,16 +196,17 @@ function DraggableKey({
           {
             backgroundColor: buttonColor,
             borderColor: theme.keyBorder,
-            width: keyWidth,
+            width: keyLabel === SPECIAL_KEYS.SPACE ? keyWidth * 2.5 : keyWidth,
+            minHeight: 44 * sizeMultiplier,
           },
           isCustomizing && styles.customizingKey,
           isDragging && styles.draggingKey,
         ]}
       >
-        <Text style={[styles.keyText, { color: "#FFFFFF" }]}>{keyLabel}</Text>
+        {getKeyDisplay()}
         {isCustomizing ? (
           <View style={styles.dragIndicator}>
-            <Feather name="move" size={12} color="rgba(255,255,255,0.6)" />
+            <Feather name="move" size={10} color="rgba(255,255,255,0.6)" />
           </View>
         ) : null}
       </Animated.View>
@@ -179,11 +214,75 @@ function DraggableKey({
   );
 }
 
+function KeySizeModal({
+  visible,
+  onClose,
+  onSelectSize,
+  currentSize,
+  keyLabel,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelectSize: (size: KeySize) => void;
+  currentSize: KeySize;
+  keyLabel: string;
+}) {
+  const { theme } = useTheme();
+  const sizes: KeySize[] = ["small", "medium", "large"];
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
+          <Text style={[styles.modalTitle, { color: theme.text }]}>
+            Resize "{keyLabel === SPECIAL_KEYS.SPACE ? "Space" : keyLabel === SPECIAL_KEYS.ENTER ? "Enter" : keyLabel === SPECIAL_KEYS.DELETE ? "Delete" : keyLabel}"
+          </Text>
+          <View style={styles.sizeOptions}>
+            {sizes.map((size) => (
+              <Pressable
+                key={size}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  onSelectSize(size);
+                  onClose();
+                }}
+                style={[
+                  styles.sizeOption,
+                  { 
+                    backgroundColor: currentSize === size ? theme.primary : theme.backgroundSecondary,
+                    borderColor: theme.keyBorder,
+                  },
+                ]}
+              >
+                <Text style={[styles.sizeOptionText, { color: currentSize === size ? "#FFFFFF" : theme.text }]}>
+                  {size.charAt(0).toUpperCase() + size.slice(1)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: CustomKeyboardProps) {
   const { theme } = useTheme();
-  const { keyboardLayout, keyboardSize, setKeyboardLayout, getButtonColor, getCustomLayout, setCustomLayout, resetCustomLayout } = usePreferences();
+  const { 
+    keyboardLayout, 
+    keyboardSize, 
+    setKeyboardLayout, 
+    getButtonColor, 
+    getCustomLayout, 
+    setCustomLayout, 
+    resetCustomLayout,
+    getKeySize,
+    setKeySize,
+  } = usePreferences();
   const { width, height } = useWindowDimensions();
   const [isCustomizing, setIsCustomizing] = useState(false);
+  const [sizeModalVisible, setSizeModalVisible] = useState(false);
+  const [selectedKeyForSize, setSelectedKeyForSize] = useState<string | null>(null);
 
   const customKeys = useMemo(() => getCustomLayout(keyboardLayout), [keyboardLayout, getCustomLayout]);
   const rowSizes = keyboardLayout === "abc" ? ABC_ROW_SIZES : QWERTY_ROW_SIZES;
@@ -191,7 +290,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
 
   const keyboardHeight = height * KeyboardSizes[keyboardSize];
   const maxKeysInRow = Math.max(...rowSizes);
-  const keyWidth = keyboardLayout === "abc" 
+  const baseKeyWidth = keyboardLayout === "abc" 
     ? (width - Spacing.lg * 2 - 5 * 10) / 5
     : (width - Spacing.lg * 2 - maxKeysInRow * 8) / maxKeysInRow;
 
@@ -218,6 +317,28 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
     setCustomLayout(keyboardLayout, newKeys);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, [customKeys, keyboardLayout, setCustomLayout]);
+
+  const handleKeyAction = (key: string) => {
+    switch (key) {
+      case SPECIAL_KEYS.SPACE:
+        onSpace();
+        break;
+      case SPECIAL_KEYS.ENTER:
+        onEnter();
+        break;
+      case SPECIAL_KEYS.DELETE:
+        onBackspace();
+        break;
+      default:
+        onKeyPress(key);
+    }
+  };
+
+  const handleLongPressForSize = (key: string) => {
+    setSelectedKeyForSize(key);
+    setSizeModalVisible(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
 
   let keyIndex = 0;
 
@@ -267,7 +388,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
 
       {isCustomizing ? (
         <Text style={[styles.hint, { color: theme.tabIconDefault }]}>
-          Hold and drag keys to rearrange
+          Hold and drag to rearrange. Long-press keys to resize.
         </Text>
       ) : null}
 
@@ -276,72 +397,40 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
           <View key={rowIndex} style={styles.row}>
             {row.map((key) => {
               const currentIndex = keyIndex++;
+              const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
               return (
                 <DraggableKey
                   key={`${key}-${currentIndex}`}
                   keyLabel={key}
                   index={currentIndex}
-                  keyWidth={keyWidth}
+                  baseKeyWidth={baseKeyWidth}
                   isCustomizing={isCustomizing}
                   onSwap={handleSwap}
-                  onPress={() => onKeyPress(key)}
+                  onPress={() => handleKeyAction(key)}
+                  onLongPressForSize={() => handleLongPressForSize(key)}
                   totalKeys={customKeys.length}
                   getButtonColor={getButtonColor}
                   rowSizes={rowSizes}
+                  keySize={getKeySize(keyboardLayout, key)}
+                  isSpecialKey={isSpecial}
                 />
               );
             })}
           </View>
         ))}
-
-        <View style={styles.bottomRow}>
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              onBackspace();
-            }}
-            onLongPress={() => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-              onBackspace();
-            }}
-            style={[
-              styles.specialKey,
-              { backgroundColor: theme.specialKey, borderColor: theme.keyBorder },
-            ]}
-            accessibilityLabel="Backspace"
-          >
-            <Feather name="delete" size={22} color={theme.text} />
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              onSpace();
-            }}
-            style={[
-              styles.spaceKey,
-              { backgroundColor: getButtonColor(), borderColor: theme.keyBorder },
-            ]}
-            accessibilityLabel="Space"
-          >
-            <Text style={[styles.spaceText, { color: "#FFFFFF" }]}>space</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              onEnter();
-            }}
-            style={[
-              styles.specialKey,
-              { backgroundColor: theme.specialKey, borderColor: theme.keyBorder },
-            ]}
-            accessibilityLabel="Enter"
-          >
-            <Feather name="corner-down-left" size={22} color={theme.text} />
-          </Pressable>
-        </View>
       </View>
+
+      <KeySizeModal
+        visible={sizeModalVisible}
+        onClose={() => setSizeModalVisible(false)}
+        onSelectSize={(size) => {
+          if (selectedKeyForSize) {
+            setKeySize(keyboardLayout, selectedKeyForSize, size);
+          }
+        }}
+        currentSize={selectedKeyForSize ? getKeySize(keyboardLayout, selectedKeyForSize) : "medium"}
+        keyLabel={selectedKeyForSize || ""}
+      />
     </View>
   );
 }
@@ -389,38 +478,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginVertical: 3,
-  },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: Spacing.md,
-  },
-  specialKey: {
-    minWidth: 60,
-    minHeight: 48,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.xs,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: Spacing.xs,
-  },
-  spaceKey: {
-    flex: 1,
-    maxWidth: 200,
-    minHeight: 48,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.xs,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: Spacing.sm,
-  },
-  spaceText: {
-    fontSize: Typography.keyboard.fontSize,
-    fontWeight: "600",
+    flexWrap: "wrap",
   },
   draggableKey: {
     minWidth: 32,
@@ -455,5 +513,36 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 2,
     right: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.md,
+    minWidth: 250,
+  },
+  modalTitle: {
+    fontSize: Typography.h4.fontSize,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  sizeOptions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  sizeOption: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+  },
+  sizeOptionText: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "500",
   },
 });
