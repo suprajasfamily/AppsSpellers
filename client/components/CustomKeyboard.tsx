@@ -471,6 +471,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.xs,
+    zIndex: 10,
   },
   leftButtons: {
     flexDirection: "row",
@@ -510,6 +511,7 @@ const styles = StyleSheet.create({
   keysContainer: {
     flex: 1,
     justifyContent: "center",
+    zIndex: 1,
   },
   row: {
     flexDirection: "row",
