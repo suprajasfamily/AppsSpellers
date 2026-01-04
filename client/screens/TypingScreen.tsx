@@ -29,7 +29,6 @@ import { apiRequest, getApiUrl } from "@/lib/query-client";
 import { Spacing, BorderRadius, Typography, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
-const KEYBOARD_HEIGHT_RATIO = 0.75;
 
 interface DriveDocument {
   id: string;
@@ -55,8 +54,6 @@ export default function TypingScreen() {
   const [documents, setDocuments] = useState<DriveDocument[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const [isLoadingDocument, setIsLoadingDocument] = useState(false);
-  
-  const keyboardHeight = height * KEYBOARD_HEIGHT_RATIO;
 
   useEffect(() => {
     return () => {
@@ -388,7 +385,7 @@ export default function TypingScreen() {
           style={[
             styles.typingArea,
             {
-              flex: 1,
+              height: height * 0.25 - 60,
               backgroundColor: theme.typingAreaBg,
               borderColor: theme.typingAreaBorder,
             },
@@ -413,7 +410,7 @@ export default function TypingScreen() {
           </ScrollView>
         </View>
 
-        <View style={{ height: keyboardHeight }}>
+        <View style={styles.keyboardContainer}>
           {mode === "keyboard" ? (
             <>
               <View style={styles.suggestionsContainer}>
@@ -554,6 +551,9 @@ const styles = StyleSheet.create({
   typingText: {
     fontSize: Typography.typing.fontSize,
     fontWeight: Typography.typing.fontWeight,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   suggestionsContainer: {
     height: 50,
