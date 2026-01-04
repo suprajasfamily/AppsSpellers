@@ -5,6 +5,13 @@ export type KeyboardLayout = "abc" | "qwerty";
 export type SizeOption = "small" | "medium" | "large";
 export type AppMode = "keyboard" | "calculator";
 export type KeySize = "small" | "medium" | "large";
+export type KeySpacing = "tight" | "normal" | "wide";
+
+export const KEY_SPACING_VALUES: Record<KeySpacing, { horizontal: number; vertical: number }> = {
+  tight: { horizontal: 2, vertical: 2 },
+  normal: { horizontal: 4, vertical: 4 },
+  wide: { horizontal: 8, vertical: 8 },
+};
 
 export const BUTTON_COLORS = [
   { id: "blue", label: "Blue", value: "#4A90E2" },
@@ -59,6 +66,7 @@ interface Preferences {
   keyboardLayout: KeyboardLayout;
   keyboardSize: SizeOption;
   typingAreaSize: SizeOption;
+  keySpacing: KeySpacing;
   displayName: string;
   avatarId: string;
   buttonColorId: string;
@@ -71,6 +79,7 @@ interface PreferencesContextType extends Preferences {
   setKeyboardLayout: (layout: KeyboardLayout) => void;
   setKeyboardSize: (size: SizeOption) => void;
   setTypingAreaSize: (size: SizeOption) => void;
+  setKeySpacing: (spacing: KeySpacing) => void;
   setDisplayName: (name: string) => void;
   setAvatarId: (id: string) => void;
   setButtonColorId: (id: string) => void;
@@ -86,6 +95,7 @@ const defaultPreferences: Preferences = {
   keyboardLayout: "abc",
   keyboardSize: "medium",
   typingAreaSize: "medium",
+  keySpacing: "normal",
   displayName: "Young Writer",
   avatarId: "robot",
   buttonColorId: "blue",
@@ -154,6 +164,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const setKeyboardLayout = (layout: KeyboardLayout) => savePreferences({ keyboardLayout: layout });
   const setKeyboardSize = (size: SizeOption) => savePreferences({ keyboardSize: size });
   const setTypingAreaSize = (size: SizeOption) => savePreferences({ typingAreaSize: size });
+  const setKeySpacing = (spacing: KeySpacing) => savePreferences({ keySpacing: spacing });
   const setDisplayName = (name: string) => savePreferences({ displayName: name });
   const setAvatarId = (id: string) => savePreferences({ avatarId: id });
   const setButtonColorId = (id: string) => savePreferences({ buttonColorId: id });
@@ -210,6 +221,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setKeyboardLayout,
         setKeyboardSize,
         setTypingAreaSize,
+        setKeySpacing,
         setDisplayName,
         setAvatarId,
         setButtonColorId,
