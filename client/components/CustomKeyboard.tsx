@@ -419,7 +419,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
 
       <View style={styles.keysContainer}>
         {layout.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.row}>
+          <View key={rowIndex} style={[styles.row, { marginVertical: spacing.vertical / 2 }]}>
             {row.map((key) => {
               const currentIndex = keyIndex++;
               const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "center",
-    flexWrap: "wrap",
+    alignItems: "center",
   },
   draggableKey: {
     minWidth: 32,
