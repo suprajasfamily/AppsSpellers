@@ -34,6 +34,29 @@ function chunkArray(array: string[], sizes: number[]): string[][] {
   return result;
 }
 
+function getRowAndColFromIndex(index: number, rowSizes: number[]): { row: number; col: number } {
+  let cumulative = 0;
+  for (let row = 0; row < rowSizes.length; row++) {
+    if (index < cumulative + rowSizes[row]) {
+      return { row, col: index - cumulative };
+    }
+    cumulative += rowSizes[row];
+  }
+  return { row: rowSizes.length - 1, col: index - cumulative + rowSizes[rowSizes.length - 1] };
+}
+
+function getIndexFromRowAndCol(row: number, col: number, rowSizes: number[]): number {
+  const clampedRow = Math.max(0, Math.min(rowSizes.length - 1, row));
+  const maxColInRow = rowSizes[clampedRow] - 1;
+  const clampedCol = Math.max(0, Math.min(maxColInRow, col));
+  
+  let index = 0;
+  for (let r = 0; r < clampedRow; r++) {
+    index += rowSizes[r];
+  }
+  return index + clampedCol;
+}
+
 interface DraggableKeyProps {
   keyLabel: string;
   index: number;
@@ -43,6 +66,7 @@ interface DraggableKeyProps {
   onPress: () => void;
   totalKeys: number;
   getButtonColor: () => string;
+  rowSizes: number[];
 }
 
 function DraggableKey({
@@ -54,6 +78,7 @@ function DraggableKey({
   onPress,
   totalKeys,
   getButtonColor,
+  rowSizes,
 }: DraggableKeyProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -69,18 +94,15 @@ function DraggableKey({
     const colOffset = Math.round(deltaX / keyWidthWithMargin);
     const rowOffset = Math.round(deltaY / keyHeight);
     
-    const keysPerRow = 5;
-    const currentRow = Math.floor(fromIdx / keysPerRow);
-    const currentCol = fromIdx % keysPerRow;
-    
-    const newRow = Math.max(0, Math.min(Math.floor(totalKeys / keysPerRow), currentRow + rowOffset));
-    const newCol = Math.max(0, Math.min(keysPerRow - 1, currentCol + colOffset));
-    const toIdx = Math.min(totalKeys - 1, newRow * keysPerRow + newCol);
+    const { row: currentRow, col: currentCol } = getRowAndColFromIndex(fromIdx, rowSizes);
+    const newRow = currentRow + rowOffset;
+    const newCol = currentCol + colOffset;
+    const toIdx = getIndexFromRowAndCol(newRow, newCol, rowSizes);
     
     if (toIdx !== fromIdx && toIdx >= 0 && toIdx < totalKeys) {
       onSwap(fromIdx, toIdx);
     }
-  }, [keyWidth, onSwap, totalKeys]);
+  }, [keyWidth, onSwap, totalKeys, rowSizes]);
 
   const longPressGesture = Gesture.LongPress()
     .minDuration(300)
@@ -265,6 +287,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
                   onPress={() => onKeyPress(key)}
                   totalKeys={customKeys.length}
                   getButtonColor={getButtonColor}
+                  rowSizes={rowSizes}
                 />
               );
             })}
