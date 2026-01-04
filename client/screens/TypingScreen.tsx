@@ -15,6 +15,13 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Speech from "expo-speech";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  runOnJS,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { ThemedView } from "@/components/ThemedView";
 import { CustomKeyboard } from "@/components/CustomKeyboard";
 import { Calculator } from "@/components/Calculator";
@@ -24,15 +31,16 @@ import { usePreferences, AppMode } from "@/contexts/PreferencesContext";
 import { getSuggestions } from "@/lib/wordSuggestions";
 import { evaluateExpression } from "@/lib/calculator";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
-import { Spacing, BorderRadius, Typography, TypingAreaSizes, Fonts } from "@/constants/theme";
+import { Spacing, BorderRadius, Typography, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+
+const KEYBOARD_HEIGHT_PRESETS = [0.5, 0.65, 0.75];
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Typing">;
 
 export default function TypingScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { typingAreaSize } = usePreferences();
   const navigation = useNavigation<NavigationProp>();
   const { height } = useWindowDimensions();
 
@@ -42,6 +50,10 @@ export default function TypingScreen() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSavingToDrive, setIsSavingToDrive] = useState(false);
   const [driveConnected, setDriveConnected] = useState(false);
+  const [keyboardHeightRatio, setKeyboardHeightRatio] = useState(0.5);
+  
+  const keyboardHeight = useSharedValue(height * 0.5);
+  const dragStartHeight = useSharedValue(0);
 
   useEffect(() => {
     return () => {
@@ -62,7 +74,39 @@ export default function TypingScreen() {
     checkDriveConnection();
   }, []);
 
-  const typingHeight = height * TypingAreaSizes[typingAreaSize];
+  const snapToPreset = useCallback((ratio: number) => {
+    let closest = KEYBOARD_HEIGHT_PRESETS[0];
+    let minDiff = Math.abs(ratio - closest);
+    for (const preset of KEYBOARD_HEIGHT_PRESETS) {
+      const diff = Math.abs(ratio - preset);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = preset;
+      }
+    }
+    setKeyboardHeightRatio(closest);
+    keyboardHeight.value = withSpring(height * closest, { damping: 15, stiffness: 150 });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [height, keyboardHeight]);
+
+  const dragGesture = Gesture.Pan()
+    .onStart(() => {
+      dragStartHeight.value = keyboardHeight.value;
+    })
+    .onUpdate((event) => {
+      const newHeight = dragStartHeight.value - event.translationY;
+      const minHeight = height * 0.4;
+      const maxHeight = height * 0.8;
+      keyboardHeight.value = Math.max(minHeight, Math.min(maxHeight, newHeight));
+    })
+    .onEnd(() => {
+      const ratio = keyboardHeight.value / height;
+      runOnJS(snapToPreset)(ratio);
+    });
+
+  const animatedKeyboardStyle = useAnimatedStyle(() => ({
+    height: keyboardHeight.value,
+  }));
 
   const updateSuggestions = useCallback((newText: string) => {
     const newSuggestions = getSuggestions(newText);
@@ -324,7 +368,7 @@ export default function TypingScreen() {
           style={[
             styles.typingArea,
             {
-              height: typingHeight,
+              flex: 1,
               backgroundColor: theme.typingAreaBg,
               borderColor: theme.typingAreaBorder,
             },
@@ -349,39 +393,50 @@ export default function TypingScreen() {
           </ScrollView>
         </View>
 
-        {mode === "keyboard" ? (
-          <>
-            <View style={styles.suggestionsContainer}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.suggestionsScroll}
-              >
-                {suggestions.map((word, index) => (
-                  <SuggestionPill
-                    key={`${word}-${index}`}
-                    word={word}
-                    onPress={handleSuggestionPress}
-                  />
-                ))}
-              </ScrollView>
-            </View>
+        <GestureDetector gesture={dragGesture}>
+          <Animated.View style={[styles.dragHandle, { backgroundColor: theme.backgroundSecondary }]}>
+            <View style={[styles.dragIndicator, { backgroundColor: theme.tabIconDefault }]} />
+            <Text style={[styles.dragHint, { color: theme.tabIconDefault }]}>
+              {Math.round(keyboardHeightRatio * 100)}%
+            </Text>
+          </Animated.View>
+        </GestureDetector>
 
-            <CustomKeyboard
-              onKeyPress={handleKeyPress}
-              onBackspace={handleBackspace}
-              onSpace={handleSpace}
-              onEnter={handleEnter}
-            />
-          </>
-        ) : (
-          <Calculator
-              onCharacter={handleCalculatorCharacter}
-              onBackspace={handleBackspace}
-              onClear={handleCalculatorClear}
-              onEvaluate={handleCalculatorEvaluate}
-            />
-        )}
+        <Animated.View style={animatedKeyboardStyle}>
+          {mode === "keyboard" ? (
+            <>
+              <View style={styles.suggestionsContainer}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.suggestionsScroll}
+                >
+                  {suggestions.map((word, index) => (
+                    <SuggestionPill
+                      key={`${word}-${index}`}
+                      word={word}
+                      onPress={handleSuggestionPress}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+
+              <CustomKeyboard
+                onKeyPress={handleKeyPress}
+                onBackspace={handleBackspace}
+                onSpace={handleSpace}
+                onEnter={handleEnter}
+              />
+            </>
+          ) : (
+            <Calculator
+                onCharacter={handleCalculatorCharacter}
+                onBackspace={handleBackspace}
+                onClear={handleCalculatorClear}
+                onEvaluate={handleCalculatorEvaluate}
+              />
+          )}
+        </Animated.View>
       </View>
     </ThemedView>
   );
@@ -453,5 +508,23 @@ const styles = StyleSheet.create({
   suggestionsScroll: {
     alignItems: "center",
     paddingHorizontal: Spacing.xs,
+  },
+  dragHandle: {
+    height: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: BorderRadius.xs,
+    marginVertical: Spacing.xs,
+  },
+  dragIndicator: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    marginRight: Spacing.sm,
+  },
+  dragHint: {
+    fontSize: Typography.small.fontSize,
+    fontWeight: "500",
   },
 });
