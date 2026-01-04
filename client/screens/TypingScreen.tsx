@@ -262,30 +262,23 @@ export default function TypingScreen() {
             ) : null}
           </View>
 
-          <View style={styles.modeToggle}>
+          <View style={styles.headerButtonGroup}>
             <Pressable
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setMode("keyboard");
               }}
               style={[
-                styles.modeButton,
-                mode === "keyboard" && { backgroundColor: theme.primary },
+                styles.headerButton,
+                { backgroundColor: mode === "keyboard" ? theme.primary : theme.backgroundSecondary },
               ]}
+              accessibilityLabel="Keyboard mode"
             >
               <Feather
                 name="type"
-                size={18}
+                size={20}
                 color={mode === "keyboard" ? "#FFFFFF" : theme.text}
               />
-              <Text
-                style={[
-                  styles.modeText,
-                  { color: mode === "keyboard" ? "#FFFFFF" : theme.text },
-                ]}
-              >
-                Keyboard
-              </Text>
             </Pressable>
             <Pressable
               onPress={() => {
@@ -293,30 +286,20 @@ export default function TypingScreen() {
                 setMode("calculator");
               }}
               style={[
-                styles.modeButton,
-                mode === "calculator" && { backgroundColor: theme.primary },
+                styles.headerButton,
+                { backgroundColor: mode === "calculator" ? theme.primary : theme.backgroundSecondary, marginLeft: Spacing.xs },
               ]}
+              accessibilityLabel="Calculator mode"
             >
               <Feather
                 name="hash"
-                size={18}
+                size={20}
                 color={mode === "calculator" ? "#FFFFFF" : theme.text}
               />
-              <Text
-                style={[
-                  styles.modeText,
-                  { color: mode === "calculator" ? "#FFFFFF" : theme.text },
-                ]}
-              >
-                Calculator
-              </Text>
             </Pressable>
-          </View>
-
-          <View style={styles.headerButtonGroup}>
             <Pressable
               onPress={() => navigation.navigate("Settings")}
-              style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary }]}
+              style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary, marginLeft: Spacing.xs }]}
               accessibilityLabel="Settings"
             >
               <Feather name="settings" size={20} color={theme.text} />
@@ -415,23 +398,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     justifyContent: "center",
     alignItems: "center",
-  },
-  modeToggle: {
-    flexDirection: "row",
-    backgroundColor: "transparent",
-  },
-  modeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-    marginHorizontal: 2,
-  },
-  modeText: {
-    marginLeft: Spacing.xs,
-    fontSize: Typography.small.fontSize,
-    fontWeight: "600",
   },
   typingArea: {
     borderRadius: BorderRadius.sm,
