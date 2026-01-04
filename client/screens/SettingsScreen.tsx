@@ -146,6 +146,7 @@ export default function SettingsScreen() {
     buttonColorId,
     voiceSettings,
     metronomeVolume,
+    metronomeBpm,
     setKeyboardLayout,
     setKeyboardSize,
     setTypingAreaSize,
@@ -155,6 +156,7 @@ export default function SettingsScreen() {
     setButtonColorId,
     setVoiceSettings,
     setMetronomeVolume,
+    setMetronomeBpm,
     resetCustomLayout,
   } = usePreferences();
 
@@ -487,6 +489,58 @@ export default function SettingsScreen() {
               </View>
               <Feather name="volume-2" size={16} color={theme.tabIconDefault} />
             </View>
+
+            <View style={styles.divider} />
+
+            <Text style={[styles.label, { color: theme.text }]}>Speed (BPM)</Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.md }]}>
+              Beats per minute - how fast the tick-tok rhythm plays
+            </Text>
+            <View style={styles.sliderRow}>
+              <Feather name="clock" size={16} color={theme.tabIconDefault} />
+              <View style={styles.sliderContainer}>
+                <View 
+                  style={[
+                    styles.sliderTrack, 
+                    { backgroundColor: theme.backgroundSecondary }
+                  ]}
+                >
+                  <View 
+                    style={[
+                      styles.sliderFill, 
+                      { 
+                        backgroundColor: theme.primary,
+                        width: `${((metronomeBpm - 30) / 90) * 100}%`,
+                      }
+                    ]}
+                  />
+                </View>
+                <View style={styles.sliderButtons}>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setMetronomeBpm(Math.max(30, metronomeBpm - 10));
+                    }}
+                    style={[styles.sliderButton, { backgroundColor: theme.backgroundSecondary }]}
+                  >
+                    <Feather name="minus" size={16} color={theme.text} />
+                  </Pressable>
+                  <Text style={[styles.sliderValue, { color: theme.text }]}>
+                    {metronomeBpm} BPM
+                  </Text>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setMetronomeBpm(Math.min(120, metronomeBpm + 10));
+                    }}
+                    style={[styles.sliderButton, { backgroundColor: theme.backgroundSecondary }]}
+                  >
+                    <Feather name="plus" size={16} color={theme.text} />
+                  </Pressable>
+                </View>
+              </View>
+              <Feather name="fast-forward" size={16} color={theme.tabIconDefault} />
+            </View>
           </View>
         </View>
 
@@ -527,6 +581,11 @@ const styles = StyleSheet.create({
   card: {
     padding: Spacing.lg,
     borderRadius: BorderRadius.md,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(128, 128, 128, 0.2)",
+    marginVertical: Spacing.lg,
   },
   label: {
     fontSize: Typography.body.fontSize,

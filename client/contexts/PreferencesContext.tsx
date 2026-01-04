@@ -81,6 +81,7 @@ interface Preferences {
   keySizes: KeySizes;
   voiceSettings: VoiceSettings;
   metronomeVolume: number;
+  metronomeBpm: number;
   isLoading: boolean;
 }
 
@@ -100,6 +101,7 @@ interface PreferencesContextType extends Preferences {
   getKeySize: (layout: KeyboardLayout, key: string) => KeySize;
   setVoiceSettings: (settings: Partial<VoiceSettings>) => void;
   setMetronomeVolume: (volume: number) => void;
+  setMetronomeBpm: (bpm: number) => void;
 }
 
 const defaultPreferences: Preferences = {
@@ -124,6 +126,7 @@ const defaultPreferences: Preferences = {
     voiceId: null,
   },
   metronomeVolume: 0.5,
+  metronomeBpm: 60,
   isLoading: true,
 };
 
@@ -243,6 +246,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     savePreferences({ metronomeVolume: Math.max(0, Math.min(1, volume)) });
   };
 
+  const setMetronomeBpm = (bpm: number) => {
+    savePreferences({ metronomeBpm: Math.max(30, Math.min(120, bpm)) });
+  };
+
   return (
     <PreferencesContext.Provider
       value={{
@@ -262,6 +269,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         getKeySize,
         setVoiceSettings,
         setMetronomeVolume,
+        setMetronomeBpm,
       }}
     >
       {children}
