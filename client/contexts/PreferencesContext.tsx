@@ -16,6 +16,14 @@ export const BUTTON_COLORS = [
   { id: "gray", label: "Gray", value: "#95A5A6" },
 ];
 
+export const DEFAULT_ABC_LAYOUT = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+export const DEFAULT_QWERTY_LAYOUT = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z", "X", "C", "V", "B", "N", "M"];
+
+interface CustomLayouts {
+  abc: string[];
+  qwerty: string[];
+}
+
 interface Preferences {
   keyboardLayout: KeyboardLayout;
   keyboardSize: SizeOption;
@@ -23,6 +31,7 @@ interface Preferences {
   displayName: string;
   avatarId: string;
   buttonColorId: string;
+  customLayouts: CustomLayouts;
   isLoading: boolean;
 }
 
@@ -34,6 +43,9 @@ interface PreferencesContextType extends Preferences {
   setAvatarId: (id: string) => void;
   setButtonColorId: (id: string) => void;
   getButtonColor: () => string;
+  setCustomLayout: (layout: KeyboardLayout, keys: string[]) => void;
+  resetCustomLayout: (layout: KeyboardLayout) => void;
+  getCustomLayout: (layout: KeyboardLayout) => string[];
 }
 
 const defaultPreferences: Preferences = {
@@ -43,6 +55,10 @@ const defaultPreferences: Preferences = {
   displayName: "Young Writer",
   avatarId: "robot",
   buttonColorId: "blue",
+  customLayouts: {
+    abc: DEFAULT_ABC_LAYOUT,
+    qwerty: DEFAULT_QWERTY_LAYOUT,
+  },
   isLoading: true,
 };
 
@@ -62,7 +78,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        setPreferences({ ...defaultPreferences, ...parsed, isLoading: false });
+        const customLayouts = parsed.customLayouts || {
+          abc: DEFAULT_ABC_LAYOUT,
+          qwerty: DEFAULT_QWERTY_LAYOUT,
+        };
+        setPreferences({ ...defaultPreferences, ...parsed, customLayouts, isLoading: false });
       } else {
         setPreferences({ ...defaultPreferences, isLoading: false });
       }
@@ -93,6 +113,27 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     return color ? color.value : BUTTON_COLORS[0].value;
   };
 
+  const setCustomLayout = (layout: KeyboardLayout, keys: string[]) => {
+    const newCustomLayouts = {
+      ...preferences.customLayouts,
+      [layout]: keys,
+    };
+    savePreferences({ customLayouts: newCustomLayouts });
+  };
+
+  const resetCustomLayout = (layout: KeyboardLayout) => {
+    const defaultLayout = layout === "abc" ? DEFAULT_ABC_LAYOUT : DEFAULT_QWERTY_LAYOUT;
+    const newCustomLayouts = {
+      ...preferences.customLayouts,
+      [layout]: defaultLayout,
+    };
+    savePreferences({ customLayouts: newCustomLayouts });
+  };
+
+  const getCustomLayout = (layout: KeyboardLayout): string[] => {
+    return preferences.customLayouts[layout] || (layout === "abc" ? DEFAULT_ABC_LAYOUT : DEFAULT_QWERTY_LAYOUT);
+  };
+
   return (
     <PreferencesContext.Provider
       value={{
@@ -104,6 +145,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setAvatarId,
         setButtonColorId,
         getButtonColor,
+        setCustomLayout,
+        resetCustomLayout,
+        getCustomLayout,
       }}
     >
       {children}
