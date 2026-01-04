@@ -255,6 +255,18 @@ export default function TypingScreen() {
     }
   }, [metronomeActive, playMetronomeTick, metronomeBpm]);
 
+  useEffect(() => {
+    if (metronomeActive) {
+      if (metronomeInterval.current) {
+        clearInterval(metronomeInterval.current);
+      }
+      const intervalMs = Math.round(60000 / metronomeBpm);
+      metronomeInterval.current = setInterval(() => {
+        playMetronomeTick();
+      }, intervalMs);
+    }
+  }, [metronomeBpm, metronomeActive, playMetronomeTick]);
+
   return (
     <ThemedView style={styles.container}>
       <View
