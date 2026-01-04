@@ -150,3 +150,42 @@ export async function checkGoogleDriveConnection(): Promise<boolean> {
     return false;
   }
 }
+
+export async function listTypeBuddyDocuments(): Promise<{ id: string; name: string; modifiedTime: string }[]> {
+  const drive = await getUncachableGoogleDriveClient();
+  
+  const response = await drive.files.list({
+    q: "mimeType = 'application/vnd.google-apps.document' and trashed = false",
+    fields: 'files(id, name, modifiedTime)',
+    spaces: 'drive',
+    orderBy: 'modifiedTime desc',
+    pageSize: 20,
+  });
+
+  return (response.data.files || []).map(file => ({
+    id: file.id!,
+    name: file.name || 'Untitled',
+    modifiedTime: file.modifiedTime || new Date().toISOString(),
+  }));
+}
+
+export async function getDocumentContent(fileId: string): Promise<string> {
+  const docs = await getGoogleDocsClient();
+  
+  const doc = await docs.documents.get({ documentId: fileId });
+  
+  let content = '';
+  const body = doc.data.body?.content || [];
+  
+  for (const element of body) {
+    if (element.paragraph?.elements) {
+      for (const textRun of element.paragraph.elements) {
+        if (textRun.textRun?.content) {
+          content += textRun.textRun.content;
+        }
+      }
+    }
+  }
+  
+  return content.trim();
+}
