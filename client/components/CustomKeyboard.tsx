@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   },
   keysContainer: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "space-evenly",
   },
   row: {
     flexDirection: "row",

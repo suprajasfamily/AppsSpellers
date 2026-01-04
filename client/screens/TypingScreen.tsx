@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.typing.fontWeight,
   },
   suggestionsContainer: {
-    height: 50,
+    height: 44,
     marginBottom: 0,
   },
   suggestionsScroll: {
