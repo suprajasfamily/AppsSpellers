@@ -221,9 +221,9 @@ export default function TypingScreen() {
   const playMetronomeTick = useCallback(() => {
     if (metronomeVolume > 0) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      Speech.speak("tock", {
-        rate: 1.8,
-        pitch: 0.6,
+      Speech.speak("t", {
+        rate: 2.0,
+        pitch: 0.5,
         volume: metronomeVolume,
       });
     }
