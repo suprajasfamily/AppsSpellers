@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Speech from "expo-speech";
 import { ThemedView } from "@/components/ThemedView";
 import { CustomKeyboard } from "@/components/CustomKeyboard";
 import { Calculator } from "@/components/Calculator";
@@ -35,6 +36,7 @@ export default function TypingScreen() {
   const [mode, setMode] = useState<AppMode>("keyboard");
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>(["I", "The", "My", "A", "We"]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const typingHeight = height * TypingAreaSizes[typingAreaSize];
 
@@ -117,6 +119,26 @@ export default function TypingScreen() {
     setText(text + result + " ");
   }, [text]);
 
+  const handleReadAloud = useCallback(async () => {
+    if (isSpeaking) {
+      await Speech.stop();
+      setIsSpeaking(false);
+      return;
+    }
+    if (!text.trim()) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsSpeaking(true);
+    Speech.speak(text, {
+      rate: 0.85,
+      onDone: () => setIsSpeaking(false),
+      onStopped: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
+  }, [text, isSpeaking]);
+
   return (
     <ThemedView style={styles.container}>
       <View
@@ -129,13 +151,25 @@ export default function TypingScreen() {
         ]}
       >
         <View style={styles.header}>
-          <Pressable
-            onPress={handleClear}
-            style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary }]}
-            accessibilityLabel="Clear text"
-          >
-            <Feather name="trash-2" size={20} color={theme.text} />
-          </Pressable>
+          <View style={styles.headerButtonGroup}>
+            <Pressable
+              onPress={handleClear}
+              style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary }]}
+              accessibilityLabel="Clear text"
+            >
+              <Feather name="trash-2" size={20} color={theme.text} />
+            </Pressable>
+            <Pressable
+              onPress={handleReadAloud}
+              style={[
+                styles.headerButton,
+                { backgroundColor: isSpeaking ? theme.primary : theme.backgroundSecondary, marginLeft: Spacing.xs },
+              ]}
+              accessibilityLabel={isSpeaking ? "Stop reading" : "Read aloud"}
+            >
+              <Feather name={isSpeaking ? "stop-circle" : "volume-2"} size={20} color={isSpeaking ? "#FFFFFF" : theme.text} />
+            </Pressable>
+          </View>
 
           <View style={styles.modeToggle}>
             <Pressable
@@ -272,6 +306,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.md,
+  },
+  headerButtonGroup: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   headerButton: {
     width: 44,
