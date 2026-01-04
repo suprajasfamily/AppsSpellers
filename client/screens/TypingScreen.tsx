@@ -220,11 +220,11 @@ export default function TypingScreen() {
 
   const playMetronomeTick = useCallback(() => {
     if (metronomeVolume > 0) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      Speech.speak("tick", {
-        rate: 2.0,
-        pitch: 1.5,
-        volume: metronomeVolume,
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Speech.speak(".", {
+        rate: 0.5,
+        pitch: 0.8,
+        volume: metronomeVolume * 0.6,
       });
     }
   }, [metronomeVolume]);
