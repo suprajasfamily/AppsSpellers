@@ -43,11 +43,26 @@ export default function TypingScreen() {
     setSuggestions(newSuggestions);
   }, []);
 
+  const shouldCapitalize = useCallback((currentText: string): boolean => {
+    if (currentText.length === 0) return true;
+    const trimmed = currentText.trimEnd();
+    if (trimmed.length === 0) return true;
+    const lastChar = trimmed[trimmed.length - 1];
+    if (lastChar === '.' || lastChar === '?' || lastChar === '!') {
+      const afterPunctuation = currentText.slice(trimmed.length);
+      return afterPunctuation.length > 0 || currentText.endsWith(' ');
+    }
+    if (currentText.endsWith('\n')) return true;
+    return false;
+  }, []);
+
   const handleKeyPress = useCallback((key: string) => {
-    const newText = text + key.toLowerCase();
+    const capitalize = shouldCapitalize(text);
+    const processedKey = capitalize ? key.toUpperCase() : key.toLowerCase();
+    const newText = text + processedKey;
     setText(newText);
     updateSuggestions(newText);
-  }, [text, updateSuggestions]);
+  }, [text, updateSuggestions, shouldCapitalize]);
 
   const handleBackspace = useCallback(() => {
     const newText = text.slice(0, -1);
