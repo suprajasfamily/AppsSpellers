@@ -127,18 +127,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        let customLayouts = parsed.customLayouts || {
+        const customLayouts = {
           abc: DEFAULT_ABC_KEYS,
-          qwerty: DEFAULT_QWERTY_KEYS,
+          qwerty: parsed.customLayouts?.qwerty || DEFAULT_QWERTY_KEYS,
         };
-        if (customLayouts.abc) {
-          const abcWithoutDelete = customLayouts.abc.filter((k: string) => k !== SPECIAL_KEYS.DELETE);
-          if (!abcWithoutDelete.includes(SPECIAL_KEYS.SPACE) || !abcWithoutDelete.includes(SPECIAL_KEYS.ENTER)) {
-            customLayouts.abc = [...abcWithoutDelete.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
-          } else {
-            customLayouts.abc = abcWithoutDelete;
-          }
-        }
         if (customLayouts.qwerty && !customLayouts.qwerty.includes(SPECIAL_KEYS.SPACE)) {
           customLayouts.qwerty = [...customLayouts.qwerty.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
         }
