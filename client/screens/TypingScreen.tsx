@@ -217,7 +217,25 @@ export default function TypingScreen() {
       Alert.alert("Saved to Google Drive", "Your notes have been saved to 'TypeBuddy Notes' in your Google Drive.");
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("Save Failed", error.message || "Could not save to Google Drive.");
+      const errorMessage = error.message || "";
+      const isPermissionError = errorMessage.toLowerCase().includes("permission") || 
+                                errorMessage.toLowerCase().includes("insufficient") ||
+                                errorMessage.includes("403");
+      const isNotConnected = errorMessage.toLowerCase().includes("not connected");
+      
+      if (isPermissionError) {
+        Alert.alert(
+          "Permission Issue",
+          "Google Drive needs additional permissions to save files.\n\nTo fix this:\n1. Go to Replit Integrations\n2. Disconnect Google Drive\n3. Reconnect and accept all permissions\n\nThis will allow the app to create files in your Drive."
+        );
+      } else if (isNotConnected) {
+        Alert.alert(
+          "Google Drive Not Connected",
+          "Please connect your Google account through Replit Integrations to save files to Google Drive."
+        );
+      } else {
+        Alert.alert("Save Failed", errorMessage || "Could not save to Google Drive. Please try again.");
+      }
     } finally {
       setIsSavingToDrive(false);
     }
