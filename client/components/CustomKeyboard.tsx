@@ -486,17 +486,17 @@ const styles = StyleSheet.create({
   deleteButtonLarge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    minWidth: 90,
+    minWidth: 110,
     justifyContent: "center",
   },
   deleteButtonText: {
-    fontSize: Typography.small.fontSize,
+    fontSize: Typography.body.fontSize,
     fontWeight: "600",
-    marginLeft: Spacing.xs,
+    marginLeft: Spacing.sm,
   },
   toggleButton: {
     flexDirection: "row",
