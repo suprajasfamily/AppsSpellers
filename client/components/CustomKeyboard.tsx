@@ -152,7 +152,11 @@ function DraggableKey({
 
   const tapGesture = Gesture.Tap()
     .enabled(!isCustomizing)
+    .onStart(() => {
+      scale.value = withSpring(0.9, { damping: 15, stiffness: 400 });
+    })
     .onEnd(() => {
+      scale.value = withSpring(1, { damping: 12, stiffness: 300 });
       runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
       runOnJS(onPress)();
     });
