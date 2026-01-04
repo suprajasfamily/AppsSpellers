@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Speech from "expo-speech";
+import { useAudioPlayer } from "expo-audio";
 import { ThemedView } from "@/components/ThemedView";
 import { CustomKeyboard } from "@/components/CustomKeyboard";
 import { Calculator } from "@/components/Calculator";
@@ -45,6 +46,9 @@ export default function TypingScreen() {
   const [metronomeActive, setMetronomeActive] = useState(false);
   const metronomeInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickTokRef = useRef<boolean>(true);
+
+  const tickPlayer = useAudioPlayer(require("@/assets/audio/tick.wav"));
+  const tokPlayer = useAudioPlayer(require("@/assets/audio/tok.wav"));
 
   useEffect(() => {
     return () => {
@@ -224,13 +228,12 @@ export default function TypingScreen() {
       const isTick = tickTokRef.current;
       tickTokRef.current = !tickTokRef.current;
       Haptics.impactAsync(isTick ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
-      Speech.speak(isTick ? "tick" : "tok", {
-        rate: 2.0,
-        pitch: isTick ? 0.7 : 0.5,
-        volume: metronomeVolume,
-      });
+      const player = isTick ? tickPlayer : tokPlayer;
+      player.volume = metronomeVolume;
+      player.seekTo(0);
+      player.play();
     }
-  }, [metronomeVolume]);
+  }, [metronomeVolume, tickPlayer, tokPlayer]);
 
   const toggleMetronome = useCallback(() => {
     if (metronomeInterval.current) {
@@ -240,7 +243,6 @@ export default function TypingScreen() {
     
     if (metronomeActive) {
       setMetronomeActive(false);
-      Speech.stop();
     } else {
       tickTokRef.current = true;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
