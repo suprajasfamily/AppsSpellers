@@ -8,9 +8,11 @@ import { usePreferences, KeyboardLayout } from "@/contexts/PreferencesContext";
 import { Spacing, KeyboardSizes, BorderRadius, Typography } from "@/constants/theme";
 
 const ABC_LAYOUT = [
-  ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
-  ["K", "L", "M", "N", "O", "P", "Q", "R", "S"],
-  ["T", "U", "V", "W", "X", "Y", "Z"],
+  ["A", "B", "C", "D", "E"],
+  ["F", "G", "H", "I", "J"],
+  ["K", "L", "M", "N", "O"],
+  ["P", "Q", "R", "S", "T"],
+  ["U", "V", "W", "X", "Y", "Z"],
 ];
 
 const QWERTY_LAYOUT = [
@@ -23,17 +25,20 @@ interface CustomKeyboardProps {
   onKeyPress: (key: string) => void;
   onBackspace: () => void;
   onSpace: () => void;
+  onEnter: () => void;
 }
 
-export function CustomKeyboard({ onKeyPress, onBackspace, onSpace }: CustomKeyboardProps) {
+export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: CustomKeyboardProps) {
   const { theme } = useTheme();
-  const { keyboardLayout, keyboardSize, setKeyboardLayout } = usePreferences();
+  const { keyboardLayout, keyboardSize, setKeyboardLayout, getButtonColor } = usePreferences();
   const { width, height } = useWindowDimensions();
 
   const layout = keyboardLayout === "abc" ? ABC_LAYOUT : QWERTY_LAYOUT;
   const keyboardHeight = height * KeyboardSizes[keyboardSize];
   const maxKeysInRow = Math.max(...layout.map(row => row.length));
-  const keyWidth = (width - Spacing.lg * 2 - maxKeysInRow * 4) / maxKeysInRow;
+  const keyWidth = keyboardLayout === "abc" 
+    ? (width - Spacing.lg * 2 - 5 * 10) / 5
+    : (width - Spacing.lg * 2 - maxKeysInRow * 8) / maxKeysInRow;
 
   const toggleLayout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -70,12 +75,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace }: CustomKeybo
         ))}
 
         <View style={styles.bottomRow}>
-          <KeyButton
-            label="space"
-            onPress={onSpace}
-            width={width * 0.5}
-            isSpecial
-          />
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -86,12 +85,40 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace }: CustomKeybo
               onBackspace();
             }}
             style={[
-              styles.backspaceKey,
+              styles.specialKey,
               { backgroundColor: theme.specialKey, borderColor: theme.keyBorder },
             ]}
             accessibilityLabel="Backspace"
           >
-            <Feather name="delete" size={24} color={theme.text} />
+            <Feather name="delete" size={22} color={theme.text} />
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onSpace();
+            }}
+            style={[
+              styles.spaceKey,
+              { backgroundColor: getButtonColor(), borderColor: theme.keyBorder },
+            ]}
+            accessibilityLabel="Space"
+          >
+            <Text style={[styles.spaceText, { color: "#FFFFFF" }]}>space</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              onEnter();
+            }}
+            style={[
+              styles.specialKey,
+              { backgroundColor: theme.specialKey, borderColor: theme.keyBorder },
+            ]}
+            accessibilityLabel="Enter"
+          >
+            <Feather name="corner-down-left" size={22} color={theme.text} />
           </Pressable>
         </View>
       </View>
@@ -131,23 +158,38 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "center",
-    marginVertical: 2,
+    marginVertical: 3,
   },
   bottomRow: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
   },
-  backspaceKey: {
+  specialKey: {
     minWidth: 60,
-    minHeight: 44,
-    paddingHorizontal: Spacing.lg,
+    minHeight: 48,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.xs,
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: Spacing.sm,
+    marginHorizontal: Spacing.xs,
+  },
+  spaceKey: {
+    flex: 1,
+    maxWidth: 200,
+    minHeight: 48,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.xs,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: Spacing.sm,
+  },
+  spaceText: {
+    fontSize: Typography.keyboard.fontSize,
+    fontWeight: "600",
   },
 });

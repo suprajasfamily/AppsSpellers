@@ -18,6 +18,7 @@ import {
   usePreferences,
   KeyboardLayout,
   SizeOption,
+  BUTTON_COLORS,
 } from "@/contexts/PreferencesContext";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 
@@ -70,6 +71,43 @@ function SegmentedControl({
   );
 }
 
+function ColorPicker({
+  selectedColorId,
+  onColorChange,
+}: {
+  selectedColorId: string;
+  onColorChange: (id: string) => void;
+}) {
+  const { theme } = useTheme();
+
+  return (
+    <View style={styles.colorGrid}>
+      {BUTTON_COLORS.map((color) => (
+        <Pressable
+          key={color.id}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onColorChange(color.id);
+          }}
+          style={[
+            styles.colorButton,
+            { backgroundColor: color.value },
+            selectedColorId === color.id && {
+              borderColor: theme.text,
+              borderWidth: 3,
+            },
+          ]}
+          accessibilityLabel={`Select ${color.label} color`}
+        >
+          {selectedColorId === color.id ? (
+            <Feather name="check" size={20} color="#FFFFFF" />
+          ) : null}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
@@ -79,11 +117,13 @@ export default function SettingsScreen() {
     typingAreaSize,
     displayName,
     avatarId,
+    buttonColorId,
     setKeyboardLayout,
     setKeyboardSize,
     setTypingAreaSize,
     setDisplayName,
     setAvatarId,
+    setButtonColorId,
   } = usePreferences();
 
   return (
@@ -176,6 +216,14 @@ export default function SettingsScreen() {
               onValueChange={(value: SizeOption) => setTypingAreaSize(value)}
               labels={["Small", "Medium", "Large"]}
             />
+
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              Button Color
+            </Text>
+            <ColorPicker
+              selectedColorId={buttonColorId}
+              onColorChange={setButtonColorId}
+            />
           </View>
         </View>
 
@@ -259,6 +307,20 @@ const styles = StyleSheet.create({
   segmentText: {
     fontSize: Typography.body.fontSize,
     fontWeight: "600",
+  },
+  colorGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+  },
+  colorButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "transparent",
   },
   aboutRow: {
     flexDirection: "row",

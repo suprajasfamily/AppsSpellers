@@ -61,6 +61,12 @@ export default function TypingScreen() {
     updateSuggestions(newText);
   }, [text, updateSuggestions]);
 
+  const handleEnter = useCallback(() => {
+    const newText = text + "\n";
+    setText(newText);
+    updateSuggestions(newText);
+  }, [text, updateSuggestions]);
+
   const handleSuggestionPress = useCallback((word: string) => {
     const words = text.trim().split(/\s+/);
     const lastWord = words[words.length - 1] || "";
@@ -230,6 +236,7 @@ export default function TypingScreen() {
               onKeyPress={handleKeyPress}
               onBackspace={handleBackspace}
               onSpace={handleSpace}
+              onEnter={handleEnter}
             />
           </>
         ) : (
