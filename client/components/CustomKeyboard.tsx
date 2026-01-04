@@ -77,6 +77,7 @@ interface DraggableKeyProps {
   onLongPressForSize?: () => void;
   totalKeys: number;
   getButtonColor: () => string;
+  getButtonTextColor: () => string;
   rowSizes: number[];
   keySize: KeySize;
   isSpecialKey: boolean;
@@ -93,6 +94,7 @@ function DraggableKey({
   onLongPressForSize,
   totalKeys,
   getButtonColor,
+  getButtonTextColor,
   rowSizes,
   keySize,
   isSpecialKey,
@@ -179,7 +181,7 @@ function DraggableKey({
   }));
 
   const buttonColor = isSpecialKey ? theme.specialKey : getButtonColor();
-  const textColor = isSpecialKey ? theme.text : "#FFFFFF";
+  const textColor = isSpecialKey ? theme.text : getButtonTextColor();
 
   const getKeyDisplay = () => {
     switch (keyLabel) {
@@ -282,7 +284,8 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
     keyboardSize,
     keySpacing,
     setKeyboardLayout, 
-    getButtonColor, 
+    getButtonColor,
+    getButtonTextColor,
     getCustomLayout, 
     setCustomLayout, 
     resetCustomLayout,
@@ -436,6 +439,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
                   onLongPressForSize={() => handleLongPressForSize(key)}
                   totalKeys={customKeys.length}
                   getButtonColor={getButtonColor}
+                  getButtonTextColor={getButtonTextColor}
                   rowSizes={rowSizes}
                   keySize={getKeySize(keyboardLayout, key)}
                   isSpecialKey={isSpecial}

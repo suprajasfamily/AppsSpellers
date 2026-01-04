@@ -14,14 +14,14 @@ export const KEY_SPACING_VALUES: Record<KeySpacing, { horizontal: number; vertic
 };
 
 export const BUTTON_COLORS = [
-  { id: "blue", label: "Blue", value: "#4A90E2" },
-  { id: "green", label: "Green", value: "#7ED321" },
-  { id: "orange", label: "Orange", value: "#F5A623" },
-  { id: "purple", label: "Purple", value: "#9B59B6" },
-  { id: "pink", label: "Pink", value: "#E91E63" },
-  { id: "teal", label: "Teal", value: "#00BCD4" },
-  { id: "red", label: "Red", value: "#E74C3C" },
-  { id: "gray", label: "Gray", value: "#95A5A6" },
+  { id: "soft-blue", label: "Soft Blue", value: "#A8C5E2", textColor: "#000000" },
+  { id: "mint", label: "Mint", value: "#B8E0D2", textColor: "#000000" },
+  { id: "peach", label: "Peach", value: "#F5D5C8", textColor: "#000000" },
+  { id: "lavender", label: "Lavender", value: "#D4C5E2", textColor: "#000000" },
+  { id: "blush", label: "Blush", value: "#F2D1D9", textColor: "#000000" },
+  { id: "sage", label: "Sage", value: "#C5D5C5", textColor: "#000000" },
+  { id: "cream", label: "Cream", value: "#F5ECD7", textColor: "#000000" },
+  { id: "cloud", label: "Cloud", value: "#E8E8E8", textColor: "#000000" },
 ];
 
 export const SPECIAL_KEYS = {
@@ -94,6 +94,7 @@ interface PreferencesContextType extends Preferences {
   setAvatarId: (id: string) => void;
   setButtonColorId: (id: string) => void;
   getButtonColor: () => string;
+  getButtonTextColor: () => string;
   setCustomLayout: (layout: KeyboardLayout, keys: string[]) => void;
   resetCustomLayout: (layout: KeyboardLayout) => void;
   getCustomLayout: (layout: KeyboardLayout) => string[];
@@ -111,7 +112,7 @@ const defaultPreferences: Preferences = {
   keySpacing: "normal",
   displayName: "Young Writer",
   avatarId: "robot",
-  buttonColorId: "blue",
+  buttonColorId: "soft-blue",
   customLayouts: {
     abc: DEFAULT_ABC_KEYS,
     qwerty: DEFAULT_QWERTY_KEYS,
@@ -194,6 +195,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     return color ? color.value : BUTTON_COLORS[0].value;
   };
 
+  const getButtonTextColor = () => {
+    const color = BUTTON_COLORS.find(c => c.id === preferences.buttonColorId);
+    return color ? color.textColor : BUTTON_COLORS[0].textColor;
+  };
+
   const setCustomLayout = (layout: KeyboardLayout, keys: string[]) => {
     const newCustomLayouts = {
       ...preferences.customLayouts,
@@ -262,6 +268,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setAvatarId,
         setButtonColorId,
         getButtonColor,
+        getButtonTextColor,
         setCustomLayout,
         resetCustomLayout,
         getCustomLayout,
