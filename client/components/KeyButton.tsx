@@ -7,6 +7,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
+import { usePreferences } from "@/contexts/PreferencesContext";
 import { BorderRadius, Spacing, Typography, Fonts } from "@/constants/theme";
 
 interface KeyButtonProps {
@@ -15,6 +16,7 @@ interface KeyButtonProps {
   width?: number | string;
   isSpecial?: boolean;
   fontSize?: number;
+  useCustomColor?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -25,9 +27,13 @@ export function KeyButton({
   width,
   isSpecial = false,
   fontSize,
+  useCustomColor = true,
 }: KeyButtonProps) {
   const { theme } = useTheme();
+  const { getButtonColor } = usePreferences();
   const scale = useSharedValue(1);
+
+  const buttonColor = useCustomColor ? getButtonColor() : theme.specialKey;
 
   const handlePressIn = () => {
     scale.value = withSpring(0.95, { damping: 15, stiffness: 400 });
@@ -46,6 +52,9 @@ export function KeyButton({
     transform: [{ scale: scale.value }],
   }));
 
+  const backgroundColor = isSpecial ? theme.specialKey : buttonColor;
+  const textColor = isSpecial ? theme.text : "#FFFFFF";
+
   return (
     <AnimatedPressable
       onPress={handlePress}
@@ -55,7 +64,7 @@ export function KeyButton({
         styles.key,
         animatedStyle,
         {
-          backgroundColor: isSpecial ? theme.specialKey : theme.keyBackground,
+          backgroundColor,
           borderColor: theme.keyBorder,
           width: width || "auto",
         },
@@ -67,7 +76,7 @@ export function KeyButton({
         style={[
           styles.keyText,
           {
-            color: theme.text,
+            color: textColor,
             fontSize: fontSize || Typography.keyboard.fontSize,
             fontFamily: Fonts?.rounded || "System",
           },
@@ -89,8 +98,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 2,
-    marginVertical: 3,
+    marginHorizontal: 3,
+    marginVertical: 4,
   },
   keyText: {
     fontWeight: Typography.keyboard.fontWeight,

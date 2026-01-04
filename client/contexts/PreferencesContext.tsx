@@ -5,12 +5,24 @@ export type KeyboardLayout = "abc" | "qwerty";
 export type SizeOption = "small" | "medium" | "large";
 export type AppMode = "keyboard" | "calculator";
 
+export const BUTTON_COLORS = [
+  { id: "blue", label: "Blue", value: "#4A90E2" },
+  { id: "green", label: "Green", value: "#7ED321" },
+  { id: "orange", label: "Orange", value: "#F5A623" },
+  { id: "purple", label: "Purple", value: "#9B59B6" },
+  { id: "pink", label: "Pink", value: "#E91E63" },
+  { id: "teal", label: "Teal", value: "#00BCD4" },
+  { id: "red", label: "Red", value: "#E74C3C" },
+  { id: "gray", label: "Gray", value: "#95A5A6" },
+];
+
 interface Preferences {
   keyboardLayout: KeyboardLayout;
   keyboardSize: SizeOption;
   typingAreaSize: SizeOption;
   displayName: string;
   avatarId: string;
+  buttonColorId: string;
   isLoading: boolean;
 }
 
@@ -20,6 +32,8 @@ interface PreferencesContextType extends Preferences {
   setTypingAreaSize: (size: SizeOption) => void;
   setDisplayName: (name: string) => void;
   setAvatarId: (id: string) => void;
+  setButtonColorId: (id: string) => void;
+  getButtonColor: () => string;
 }
 
 const defaultPreferences: Preferences = {
@@ -28,6 +42,7 @@ const defaultPreferences: Preferences = {
   typingAreaSize: "medium",
   displayName: "Young Writer",
   avatarId: "robot",
+  buttonColorId: "blue",
   isLoading: true,
 };
 
@@ -47,7 +62,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        setPreferences({ ...parsed, isLoading: false });
+        setPreferences({ ...defaultPreferences, ...parsed, isLoading: false });
       } else {
         setPreferences({ ...defaultPreferences, isLoading: false });
       }
@@ -71,6 +86,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const setTypingAreaSize = (size: SizeOption) => savePreferences({ typingAreaSize: size });
   const setDisplayName = (name: string) => savePreferences({ displayName: name });
   const setAvatarId = (id: string) => savePreferences({ avatarId: id });
+  const setButtonColorId = (id: string) => savePreferences({ buttonColorId: id });
+  
+  const getButtonColor = () => {
+    const color = BUTTON_COLORS.find(c => c.id === preferences.buttonColorId);
+    return color ? color.value : BUTTON_COLORS[0].value;
+  };
 
   return (
     <PreferencesContext.Provider
@@ -81,6 +102,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setTypingAreaSize,
         setDisplayName,
         setAvatarId,
+        setButtonColorId,
+        getButtonColor,
       }}
     >
       {children}
