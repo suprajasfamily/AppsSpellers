@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -37,6 +37,12 @@ export default function TypingScreen() {
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>(["I", "The", "My", "A", "We"]);
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
 
   const typingHeight = height * TypingAreaSizes[typingAreaSize];
 
