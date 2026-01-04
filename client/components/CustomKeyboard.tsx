@@ -17,6 +17,7 @@ import {
   ABC_ROW_SIZES, 
   QWERTY_ROW_SIZES,
   KeySize,
+  KEY_SPACING_VALUES,
 } from "@/contexts/PreferencesContext";
 import { Spacing, KeyboardSizes, BorderRadius, Typography } from "@/constants/theme";
 
@@ -79,6 +80,7 @@ interface DraggableKeyProps {
   rowSizes: number[];
   keySize: KeySize;
   isSpecialKey: boolean;
+  keyMargin: { horizontal: number; vertical: number };
 }
 
 function DraggableKey({
@@ -94,6 +96,7 @@ function DraggableKey({
   rowSizes,
   keySize,
   isSpecialKey,
+  keyMargin,
 }: DraggableKeyProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -202,6 +205,8 @@ function DraggableKey({
             borderColor: theme.keyBorder,
             width: keyLabel === SPECIAL_KEYS.SPACE ? keyWidth * 2.5 : keyWidth,
             minHeight: 44 * sizeMultiplier,
+            marginHorizontal: keyMargin.horizontal,
+            marginVertical: keyMargin.vertical,
           },
           isCustomizing && styles.customizingKey,
           isDragging && styles.draggingKey,
@@ -274,7 +279,8 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   const { theme } = useTheme();
   const { 
     keyboardLayout, 
-    keyboardSize, 
+    keyboardSize,
+    keySpacing,
     setKeyboardLayout, 
     getButtonColor, 
     getCustomLayout, 
@@ -294,9 +300,10 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
 
   const keyboardHeight = height * KeyboardSizes[keyboardSize];
   const maxKeysInRow = Math.max(...rowSizes);
+  const spacing = KEY_SPACING_VALUES[keySpacing];
   const baseKeyWidth = keyboardLayout === "abc" 
-    ? (width - Spacing.lg * 2 - 5 * 10) / 5
-    : (width - Spacing.lg * 2 - maxKeysInRow * 8) / maxKeysInRow;
+    ? (width - Spacing.lg * 2 - 5 * (spacing.horizontal * 2)) / 5
+    : (width - Spacing.lg * 2 - maxKeysInRow * (spacing.horizontal * 2)) / maxKeysInRow;
 
   const toggleLayout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -431,6 +438,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
                   rowSizes={rowSizes}
                   keySize={getKeySize(keyboardLayout, key)}
                   isSpecialKey={isSpecial}
+                  keyMargin={spacing}
                 />
               );
             })}
@@ -506,7 +514,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "center",
-    marginVertical: 3,
     flexWrap: "wrap",
   },
   draggableKey: {
@@ -518,8 +525,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 3,
-    marginVertical: 4,
   },
   keyText: {
     fontSize: Typography.keyboard.fontSize,

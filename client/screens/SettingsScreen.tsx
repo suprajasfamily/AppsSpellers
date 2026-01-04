@@ -18,6 +18,7 @@ import {
   usePreferences,
   KeyboardLayout,
   SizeOption,
+  KeySpacing,
   BUTTON_COLORS,
 } from "@/contexts/PreferencesContext";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
@@ -29,6 +30,7 @@ const avatars = [
 ];
 
 const sizeOptions: SizeOption[] = ["small", "medium", "large"];
+const spacingOptions: KeySpacing[] = ["tight", "normal", "wide"];
 
 function SegmentedControl({
   options,
@@ -115,12 +117,14 @@ export default function SettingsScreen() {
     keyboardLayout,
     keyboardSize,
     typingAreaSize,
+    keySpacing,
     displayName,
     avatarId,
     buttonColorId,
     setKeyboardLayout,
     setKeyboardSize,
     setTypingAreaSize,
+    setKeySpacing,
     setDisplayName,
     setAvatarId,
     setButtonColorId,
@@ -216,6 +220,19 @@ export default function SettingsScreen() {
               selectedValue={typingAreaSize}
               onValueChange={(value: SizeOption) => setTypingAreaSize(value)}
               labels={["Small", "Medium", "Large"]}
+            />
+
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              Key Spacing
+            </Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.sm }]}>
+              More space between keys makes them easier to find and tap
+            </Text>
+            <SegmentedControl
+              options={spacingOptions}
+              selectedValue={keySpacing}
+              onValueChange={(value: KeySpacing) => setKeySpacing(value)}
+              labels={["Tight", "Normal", "Wide"]}
             />
 
             <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
