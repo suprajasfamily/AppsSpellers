@@ -313,13 +313,15 @@ export default function TypingScreen() {
             </Pressable>
           </View>
 
-          <Pressable
-            onPress={() => navigation.navigate("Settings")}
-            style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary }]}
-            accessibilityLabel="Settings"
-          >
-            <Feather name="settings" size={20} color={theme.text} />
-          </Pressable>
+          <View style={styles.headerButtonGroup}>
+            <Pressable
+              onPress={() => navigation.navigate("Settings")}
+              style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary }]}
+              accessibilityLabel="Settings"
+            >
+              <Feather name="settings" size={20} color={theme.text} />
+            </Pressable>
+          </View>
         </View>
 
         <View
