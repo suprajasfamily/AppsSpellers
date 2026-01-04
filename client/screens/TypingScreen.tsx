@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   typingArea: {
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    marginBottom: Spacing.md,
+    marginBottom: 0,
     overflow: "hidden",
   },
   typingScroll: {
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   },
   suggestionsContainer: {
     height: 50,
-    marginBottom: Spacing.sm,
+    marginBottom: 0,
   },
   suggestionsScroll: {
     alignItems: "center",

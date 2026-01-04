@@ -345,16 +345,30 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   return (
     <View style={[styles.container, { height: keyboardHeight }]}>
       <View style={styles.topBar}>
-        <Pressable
-          onPress={toggleLayout}
-          style={[styles.toggleButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder }]}
-          accessibilityLabel={`Switch to ${keyboardLayout === "abc" ? "QWERTY" : "ABC"} layout`}
-        >
-          <Text style={[styles.toggleText, { color: theme.text }]}>
-            {keyboardLayout === "abc" ? "ABC" : "QWERTY"}
-          </Text>
-          <Feather name="refresh-cw" size={14} color={theme.text} style={styles.toggleIcon} />
-        </Pressable>
+        <View style={styles.leftButtons}>
+          <Pressable
+            onPress={toggleLayout}
+            style={[styles.toggleButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder }]}
+            accessibilityLabel={`Switch to ${keyboardLayout === "abc" ? "QWERTY" : "ABC"} layout`}
+          >
+            <Text style={[styles.toggleText, { color: theme.text }]}>
+              {keyboardLayout === "abc" ? "ABC" : "QWERTY"}
+            </Text>
+            <Feather name="refresh-cw" size={14} color={theme.text} style={styles.toggleIcon} />
+          </Pressable>
+          {keyboardLayout === "abc" ? (
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onBackspace();
+              }}
+              style={[styles.deleteButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder }]}
+              accessibilityLabel="Delete"
+            >
+              <Feather name="delete" size={18} color={theme.text} />
+            </Pressable>
+          ) : null}
+        </View>
 
         <View style={styles.customizeButtons}>
           {isCustomizing ? (
@@ -444,11 +458,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  leftButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
   },
   customizeButtons: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  deleteButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
   },
   toggleButton: {
     flexDirection: "row",

@@ -28,8 +28,7 @@ export const DEFAULT_ABC_KEYS = [
   "F", "G", "H", "I", "J",
   "K", "L", "M", "N", "O",
   "P", "Q", "R", "S", "T",
-  "U", "V", "W", "X", "Y", "Z",
-  SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
+  "U", "V", "W", "X", "Y", "Z", SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
 ];
 
 export const DEFAULT_QWERTY_KEYS = [
@@ -39,7 +38,7 @@ export const DEFAULT_QWERTY_KEYS = [
   SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
 ];
 
-export const ABC_ROW_SIZES = [5, 5, 5, 5, 6, 3];
+export const ABC_ROW_SIZES = [5, 5, 5, 5, 8];
 export const QWERTY_ROW_SIZES = [10, 9, 7, 3];
 
 export interface KeySizeMap {
@@ -121,8 +120,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
           abc: DEFAULT_ABC_KEYS,
           qwerty: DEFAULT_QWERTY_KEYS,
         };
-        if (customLayouts.abc && !customLayouts.abc.includes(SPECIAL_KEYS.SPACE)) {
-          customLayouts.abc = [...customLayouts.abc.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
+        if (customLayouts.abc) {
+          const abcWithoutDelete = customLayouts.abc.filter((k: string) => k !== SPECIAL_KEYS.DELETE);
+          if (!abcWithoutDelete.includes(SPECIAL_KEYS.SPACE) || !abcWithoutDelete.includes(SPECIAL_KEYS.ENTER)) {
+            customLayouts.abc = [...abcWithoutDelete.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
+          } else {
+            customLayouts.abc = abcWithoutDelete;
+          }
         }
         if (customLayouts.qwerty && !customLayouts.qwerty.includes(SPECIAL_KEYS.SPACE)) {
           customLayouts.qwerty = [...customLayouts.qwerty.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
