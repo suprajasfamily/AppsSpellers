@@ -103,7 +103,7 @@ interface PreferencesContextType extends Preferences {
 const defaultPreferences: Preferences = {
   keyboardLayout: "abc",
   keyboardSize: "medium",
-  typingAreaSize: "medium",
+  typingAreaSize: "small",
   keySpacing: "normal",
   displayName: "Young Writer",
   avatarId: "robot",
