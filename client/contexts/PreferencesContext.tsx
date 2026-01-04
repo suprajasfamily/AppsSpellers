@@ -35,7 +35,8 @@ export const DEFAULT_ABC_KEYS = [
   "F", "G", "H", "I", "J",
   "K", "L", "M", "N", "O",
   "P", "Q", "R", "S", "T",
-  "U", "V", "W", "X", "Y", "Z", SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
+  "U", "V", "W", "X", "Y",
+  "Z", SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
 ];
 
 export const DEFAULT_QWERTY_KEYS = [
@@ -45,7 +46,7 @@ export const DEFAULT_QWERTY_KEYS = [
   SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
 ];
 
-export const ABC_ROW_SIZES = [5, 5, 5, 5, 8];
+export const ABC_ROW_SIZES = [5, 5, 5, 5, 5, 3];
 export const QWERTY_ROW_SIZES = [10, 9, 7, 3];
 
 export interface KeySizeMap {
