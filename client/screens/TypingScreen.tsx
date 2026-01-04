@@ -32,7 +32,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Typing">;
 export default function TypingScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { typingAreaSize, voiceSettings, metronomeVolume } = usePreferences();
+  const { typingAreaSize, voiceSettings, metronomeVolume, metronomeBpm } = usePreferences();
   const navigation = useNavigation<NavigationProp>();
   const { height } = useWindowDimensions();
 
@@ -44,6 +44,7 @@ export default function TypingScreen() {
   const [driveConnected, setDriveConnected] = useState(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const metronomeInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tickTokRef = useRef<boolean>(true);
 
   useEffect(() => {
     return () => {
@@ -220,10 +221,12 @@ export default function TypingScreen() {
 
   const playMetronomeTick = useCallback(() => {
     if (metronomeVolume > 0) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      Speech.speak("t", {
+      const isTick = tickTokRef.current;
+      tickTokRef.current = !tickTokRef.current;
+      Haptics.impactAsync(isTick ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
+      Speech.speak(isTick ? "tick" : "tok", {
         rate: 2.0,
-        pitch: 0.5,
+        pitch: isTick ? 0.7 : 0.5,
         volume: metronomeVolume,
       });
     }
@@ -239,14 +242,16 @@ export default function TypingScreen() {
       setMetronomeActive(false);
       Speech.stop();
     } else {
+      tickTokRef.current = true;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setMetronomeActive(true);
+      const intervalMs = Math.round(60000 / metronomeBpm);
       playMetronomeTick();
       metronomeInterval.current = setInterval(() => {
         playMetronomeTick();
-      }, 1000);
+      }, intervalMs);
     }
-  }, [metronomeActive, playMetronomeTick]);
+  }, [metronomeActive, playMetronomeTick, metronomeBpm]);
 
   return (
     <ThemedView style={styles.container}>
