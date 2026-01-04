@@ -10,7 +10,7 @@ export type KeySpacing = "tight" | "normal" | "wide";
 export const KEY_SPACING_VALUES: Record<KeySpacing, { horizontal: number; vertical: number }> = {
   tight: { horizontal: 2, vertical: 2 },
   normal: { horizontal: 4, vertical: 4 },
-  wide: { horizontal: 8, vertical: 8 },
+  wide: { horizontal: 12, vertical: 10 },
 };
 
 export const BUTTON_COLORS = [
@@ -80,6 +80,7 @@ interface Preferences {
   customLayouts: CustomLayouts;
   keySizes: KeySizes;
   voiceSettings: VoiceSettings;
+  metronomeVolume: number;
   isLoading: boolean;
 }
 
@@ -98,6 +99,7 @@ interface PreferencesContextType extends Preferences {
   setKeySize: (layout: KeyboardLayout, key: string, size: KeySize) => void;
   getKeySize: (layout: KeyboardLayout, key: string) => KeySize;
   setVoiceSettings: (settings: Partial<VoiceSettings>) => void;
+  setMetronomeVolume: (volume: number) => void;
 }
 
 const defaultPreferences: Preferences = {
@@ -121,6 +123,7 @@ const defaultPreferences: Preferences = {
     pitch: 0.95,
     voiceId: null,
   },
+  metronomeVolume: 0.5,
   isLoading: true,
 };
 
@@ -236,6 +239,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     savePreferences({ voiceSettings: newVoiceSettings });
   };
 
+  const setMetronomeVolume = (volume: number) => {
+    savePreferences({ metronomeVolume: Math.max(0, Math.min(1, volume)) });
+  };
+
   return (
     <PreferencesContext.Provider
       value={{
@@ -254,6 +261,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setKeySize,
         getKeySize,
         setVoiceSettings,
+        setMetronomeVolume,
       }}
     >
       {children}

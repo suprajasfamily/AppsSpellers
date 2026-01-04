@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -32,7 +32,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Typing">;
 export default function TypingScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { typingAreaSize, voiceSettings } = usePreferences();
+  const { typingAreaSize, voiceSettings, metronomeVolume } = usePreferences();
   const navigation = useNavigation<NavigationProp>();
   const { height } = useWindowDimensions();
 
@@ -42,10 +42,15 @@ export default function TypingScreen() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSavingToDrive, setIsSavingToDrive] = useState(false);
   const [driveConnected, setDriveConnected] = useState(false);
+  const [metronomeActive, setMetronomeActive] = useState(false);
+  const metronomeInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     return () => {
       Speech.stop();
+      if (metronomeInterval.current) {
+        clearInterval(metronomeInterval.current);
+      }
     };
   }, []);
 
@@ -213,6 +218,25 @@ export default function TypingScreen() {
     }
   }, [text]);
 
+  const toggleMetronome = useCallback(() => {
+    if (metronomeInterval.current) {
+      clearInterval(metronomeInterval.current);
+      metronomeInterval.current = null;
+    }
+    
+    if (metronomeActive) {
+      setMetronomeActive(false);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setMetronomeActive(true);
+      metronomeInterval.current = setInterval(() => {
+        if (metronomeVolume > 0) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        }
+      }, 1000);
+    }
+  }, [metronomeActive, metronomeVolume]);
+
   return (
     <ThemedView style={styles.container}>
       <View
@@ -242,6 +266,16 @@ export default function TypingScreen() {
               accessibilityLabel={isSpeaking ? "Stop reading" : "Read aloud"}
             >
               <Feather name={isSpeaking ? "stop-circle" : "volume-2"} size={20} color={isSpeaking ? "#FFFFFF" : theme.text} />
+            </Pressable>
+            <Pressable
+              onPress={toggleMetronome}
+              style={[
+                styles.headerButton,
+                { backgroundColor: metronomeActive ? theme.primary : theme.backgroundSecondary, marginLeft: Spacing.xs },
+              ]}
+              accessibilityLabel={metronomeActive ? "Stop metronome" : "Start metronome"}
+            >
+              <Feather name="clock" size={20} color={metronomeActive ? "#FFFFFF" : theme.text} />
             </Pressable>
             {driveConnected ? (
               <Pressable

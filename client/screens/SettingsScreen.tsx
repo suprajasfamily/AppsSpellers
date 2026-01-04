@@ -145,6 +145,7 @@ export default function SettingsScreen() {
     avatarId,
     buttonColorId,
     voiceSettings,
+    metronomeVolume,
     setKeyboardLayout,
     setKeyboardSize,
     setTypingAreaSize,
@@ -153,6 +154,7 @@ export default function SettingsScreen() {
     setAvatarId,
     setButtonColorId,
     setVoiceSettings,
+    setMetronomeVolume,
     resetCustomLayout,
   } = usePreferences();
 
@@ -364,6 +366,55 @@ export default function SettingsScreen() {
               })}
             </View>
 
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              Reading Speed
+            </Text>
+            <View style={styles.sliderRow}>
+              <Feather name="rewind" size={16} color={theme.tabIconDefault} />
+              <View style={styles.sliderContainer}>
+                <View 
+                  style={[
+                    styles.sliderTrack, 
+                    { backgroundColor: theme.backgroundSecondary }
+                  ]}
+                >
+                  <View 
+                    style={[
+                      styles.sliderFill, 
+                      { 
+                        backgroundColor: theme.primary,
+                        width: `${((voiceSettings.rate - 0.5) / 1.5) * 100}%`,
+                      }
+                    ]}
+                  />
+                </View>
+                <View style={styles.sliderButtons}>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setVoiceSettings({ rate: Math.max(0.5, voiceSettings.rate - 0.1) });
+                    }}
+                    style={[styles.sliderButton, { backgroundColor: theme.backgroundSecondary }]}
+                  >
+                    <Feather name="minus" size={16} color={theme.text} />
+                  </Pressable>
+                  <Text style={[styles.sliderValue, { color: theme.text }]}>
+                    {voiceSettings.rate.toFixed(1)}x
+                  </Text>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setVoiceSettings({ rate: Math.min(2.0, voiceSettings.rate + 0.1) });
+                    }}
+                    style={[styles.sliderButton, { backgroundColor: theme.backgroundSecondary }]}
+                  >
+                    <Feather name="plus" size={16} color={theme.text} />
+                  </Pressable>
+                </View>
+              </View>
+              <Feather name="fast-forward" size={16} color={theme.tabIconDefault} />
+            </View>
+
             <Pressable
               onPress={testVoice}
               style={[
@@ -380,6 +431,62 @@ export default function SettingsScreen() {
                 {isTesting ? "Stop" : "Test Voice"}
               </Text>
             </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>Metronome</ThemedText>
+          
+          <View style={[styles.card, { backgroundColor: theme.backgroundDefault }]}>
+            <Text style={[styles.label, { color: theme.text }]}>Volume</Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.md }]}>
+              Adjust the metronome beat volume
+            </Text>
+            <View style={styles.sliderRow}>
+              <Feather name="volume" size={16} color={theme.tabIconDefault} />
+              <View style={styles.sliderContainer}>
+                <View 
+                  style={[
+                    styles.sliderTrack, 
+                    { backgroundColor: theme.backgroundSecondary }
+                  ]}
+                >
+                  <View 
+                    style={[
+                      styles.sliderFill, 
+                      { 
+                        backgroundColor: theme.primary,
+                        width: `${metronomeVolume * 100}%`,
+                      }
+                    ]}
+                  />
+                </View>
+                <View style={styles.sliderButtons}>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setMetronomeVolume(Math.max(0, metronomeVolume - 0.1));
+                    }}
+                    style={[styles.sliderButton, { backgroundColor: theme.backgroundSecondary }]}
+                  >
+                    <Feather name="minus" size={16} color={theme.text} />
+                  </Pressable>
+                  <Text style={[styles.sliderValue, { color: theme.text }]}>
+                    {Math.round(metronomeVolume * 100)}%
+                  </Text>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setMetronomeVolume(Math.min(1, metronomeVolume + 0.1));
+                    }}
+                    style={[styles.sliderButton, { backgroundColor: theme.backgroundSecondary }]}
+                  >
+                    <Feather name="plus" size={16} color={theme.text} />
+                  </Pressable>
+                </View>
+              </View>
+              <Feather name="volume-2" size={16} color={theme.tabIconDefault} />
+            </View>
           </View>
         </View>
 
@@ -527,16 +634,34 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   sliderButton: {
-    flex: 1,
     paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.xs,
-    borderWidth: 1,
     alignItems: "center",
+    justifyContent: "center",
   },
   sliderButtonText: {
     fontSize: Typography.small.fontSize,
     fontWeight: "500",
+  },
+  sliderContainer: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  sliderTrack: {
+    height: 8,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  sliderFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  sliderValue: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "600",
+    textAlign: "center",
+    minWidth: 50,
   },
   voiceScrollView: {
     marginBottom: Spacing.md,
