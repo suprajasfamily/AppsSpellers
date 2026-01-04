@@ -34,11 +34,16 @@ interface VoicePreset {
 }
 
 const VOICE_PRESETS: VoicePreset[] = [
-  { id: "boy-us", label: "American Boy", description: "Young boy voice", pitch: 1.3, rate: 0.85 },
-  { id: "girl-us", label: "American Girl", description: "Young girl voice", pitch: 1.4, rate: 0.85 },
-  { id: "boy-uk", label: "British Boy", description: "British accent", pitch: 1.25, rate: 0.8 },
-  { id: "girl-uk", label: "British Girl", description: "British accent", pitch: 1.35, rate: 0.8 },
-  { id: "adult", label: "Adult Voice", description: "Standard voice", pitch: 1.0, rate: 0.9 },
+  { id: "us-male-1", label: "American Man 1", description: "Deep voice", pitch: 0.85, rate: 0.9 },
+  { id: "us-male-2", label: "American Man 2", description: "Standard voice", pitch: 0.95, rate: 0.95 },
+  { id: "us-female-1", label: "American Woman 1", description: "Warm voice", pitch: 1.15, rate: 0.9 },
+  { id: "us-female-2", label: "American Woman 2", description: "Bright voice", pitch: 1.25, rate: 0.95 },
+  { id: "es-male", label: "Spanish Man", description: "Spanish accent", pitch: 0.9, rate: 0.85 },
+  { id: "es-female", label: "Spanish Woman", description: "Spanish accent", pitch: 1.2, rate: 0.85 },
+  { id: "uk-male", label: "British Man", description: "British accent", pitch: 0.88, rate: 0.88 },
+  { id: "uk-female", label: "British Woman", description: "British accent", pitch: 1.18, rate: 0.88 },
+  { id: "in-male", label: "Indian Man", description: "Indian accent", pitch: 0.92, rate: 0.82 },
+  { id: "in-female", label: "Indian Woman", description: "Indian accent", pitch: 1.22, rate: 0.82 },
 ];
 
 const avatars = [
