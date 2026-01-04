@@ -218,6 +218,17 @@ export default function TypingScreen() {
     }
   }, [text]);
 
+  const playMetronomeTick = useCallback(() => {
+    if (metronomeVolume > 0) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      Speech.speak("tick", {
+        rate: 2.0,
+        pitch: 1.5,
+        volume: metronomeVolume,
+      });
+    }
+  }, [metronomeVolume]);
+
   const toggleMetronome = useCallback(() => {
     if (metronomeInterval.current) {
       clearInterval(metronomeInterval.current);
@@ -226,16 +237,16 @@ export default function TypingScreen() {
     
     if (metronomeActive) {
       setMetronomeActive(false);
+      Speech.stop();
     } else {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setMetronomeActive(true);
+      playMetronomeTick();
       metronomeInterval.current = setInterval(() => {
-        if (metronomeVolume > 0) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        }
+        playMetronomeTick();
       }, 1000);
     }
-  }, [metronomeActive, metronomeVolume]);
+  }, [metronomeActive, playMetronomeTick]);
 
   return (
     <ThemedView style={styles.container}>
