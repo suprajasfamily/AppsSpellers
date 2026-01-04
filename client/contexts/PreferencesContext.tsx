@@ -247,7 +247,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   };
 
   const setMetronomeBpm = (bpm: number) => {
-    savePreferences({ metronomeBpm: Math.max(30, Math.min(120, bpm)) });
+    savePreferences({ metronomeBpm: Math.max(10, Math.min(120, bpm)) });
   };
 
   return (

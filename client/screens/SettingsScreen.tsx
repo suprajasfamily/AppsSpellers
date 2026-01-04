@@ -510,7 +510,7 @@ export default function SettingsScreen() {
                       styles.sliderFill, 
                       { 
                         backgroundColor: theme.primary,
-                        width: `${((metronomeBpm - 30) / 90) * 100}%`,
+                        width: `${((metronomeBpm - 10) / 110) * 100}%`,
                       }
                     ]}
                   />
@@ -519,7 +519,7 @@ export default function SettingsScreen() {
                   <Pressable
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setMetronomeBpm(Math.max(30, metronomeBpm - 10));
+                      setMetronomeBpm(Math.max(10, metronomeBpm - 5));
                     }}
                     style={[styles.sliderButton, { backgroundColor: theme.backgroundSecondary }]}
                   >
@@ -531,7 +531,7 @@ export default function SettingsScreen() {
                   <Pressable
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setMetronomeBpm(Math.min(120, metronomeBpm + 10));
+                      setMetronomeBpm(Math.min(120, metronomeBpm + 5));
                     }}
                     style={[styles.sliderButton, { backgroundColor: theme.backgroundSecondary }]}
                   >
@@ -541,6 +541,10 @@ export default function SettingsScreen() {
               </View>
               <Feather name="fast-forward" size={16} color={theme.tabIconDefault} />
             </View>
+
+            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginTop: Spacing.sm }]}>
+              Lower BPM = slower ticks. 10 BPM = 1 tick every 6 seconds
+            </Text>
           </View>
         </View>
 
