@@ -269,16 +269,19 @@ export default function TypingScreen() {
                 setMode("keyboard");
               }}
               style={[
-                styles.headerButton,
+                styles.modeButton,
                 { backgroundColor: mode === "keyboard" ? theme.primary : theme.backgroundSecondary },
               ]}
-              accessibilityLabel="Keyboard mode"
+              accessibilityLabel="Letters mode"
             >
               <Feather
                 name="type"
-                size={20}
+                size={16}
                 color={mode === "keyboard" ? "#FFFFFF" : theme.text}
               />
+              <Text style={[styles.modeButtonText, { color: mode === "keyboard" ? "#FFFFFF" : theme.text }]}>
+                Letters
+              </Text>
             </Pressable>
             <Pressable
               onPress={() => {
@@ -286,16 +289,19 @@ export default function TypingScreen() {
                 setMode("calculator");
               }}
               style={[
-                styles.headerButton,
+                styles.modeButton,
                 { backgroundColor: mode === "calculator" ? theme.primary : theme.backgroundSecondary, marginLeft: Spacing.xs },
               ]}
-              accessibilityLabel="Calculator mode"
+              accessibilityLabel="Numeric mode"
             >
               <Feather
                 name="hash"
-                size={20}
+                size={16}
                 color={mode === "calculator" ? "#FFFFFF" : theme.text}
               />
+              <Text style={[styles.modeButtonText, { color: mode === "calculator" ? "#FFFFFF" : theme.text }]}>
+                Numeric
+              </Text>
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate("Settings")}
@@ -398,6 +404,19 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     justifyContent: "center",
     alignItems: "center",
+  },
+  modeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    height: 44,
+    borderRadius: BorderRadius.sm,
+  },
+  modeButtonText: {
+    fontSize: Typography.small.fontSize,
+    fontWeight: "600",
+    marginLeft: 4,
   },
   typingArea: {
     borderRadius: BorderRadius.sm,
