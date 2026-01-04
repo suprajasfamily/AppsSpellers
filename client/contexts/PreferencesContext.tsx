@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export type KeyboardLayout = "abc" | "qwerty";
 export type SizeOption = "small" | "medium" | "large";
 export type AppMode = "keyboard" | "calculator";
+export type KeySize = "small" | "medium" | "large";
 
 export const BUTTON_COLORS = [
   { id: "blue", label: "Blue", value: "#4A90E2" },
@@ -16,12 +17,43 @@ export const BUTTON_COLORS = [
   { id: "gray", label: "Gray", value: "#95A5A6" },
 ];
 
-export const DEFAULT_ABC_LAYOUT = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
-export const DEFAULT_QWERTY_LAYOUT = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z", "X", "C", "V", "B", "N", "M"];
+export const SPECIAL_KEYS = {
+  SPACE: "SPACE",
+  ENTER: "ENTER",
+  DELETE: "DELETE",
+};
+
+export const DEFAULT_ABC_KEYS = [
+  "A", "B", "C", "D", "E",
+  "F", "G", "H", "I", "J",
+  "K", "L", "M", "N", "O",
+  "P", "Q", "R", "S", "T",
+  "U", "V", "W", "X", "Y", "Z",
+  SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
+];
+
+export const DEFAULT_QWERTY_KEYS = [
+  "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
+  "A", "S", "D", "F", "G", "H", "J", "K", "L",
+  "Z", "X", "C", "V", "B", "N", "M",
+  SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
+];
+
+export const ABC_ROW_SIZES = [5, 5, 5, 5, 6, 3];
+export const QWERTY_ROW_SIZES = [10, 9, 7, 3];
+
+export interface KeySizeMap {
+  [key: string]: KeySize;
+}
 
 interface CustomLayouts {
   abc: string[];
   qwerty: string[];
+}
+
+interface KeySizes {
+  abc: KeySizeMap;
+  qwerty: KeySizeMap;
 }
 
 interface Preferences {
@@ -32,6 +64,7 @@ interface Preferences {
   avatarId: string;
   buttonColorId: string;
   customLayouts: CustomLayouts;
+  keySizes: KeySizes;
   isLoading: boolean;
 }
 
@@ -46,6 +79,8 @@ interface PreferencesContextType extends Preferences {
   setCustomLayout: (layout: KeyboardLayout, keys: string[]) => void;
   resetCustomLayout: (layout: KeyboardLayout) => void;
   getCustomLayout: (layout: KeyboardLayout) => string[];
+  setKeySize: (layout: KeyboardLayout, key: string, size: KeySize) => void;
+  getKeySize: (layout: KeyboardLayout, key: string) => KeySize;
 }
 
 const defaultPreferences: Preferences = {
@@ -56,8 +91,12 @@ const defaultPreferences: Preferences = {
   avatarId: "robot",
   buttonColorId: "blue",
   customLayouts: {
-    abc: DEFAULT_ABC_LAYOUT,
-    qwerty: DEFAULT_QWERTY_LAYOUT,
+    abc: DEFAULT_ABC_KEYS,
+    qwerty: DEFAULT_QWERTY_KEYS,
+  },
+  keySizes: {
+    abc: {},
+    qwerty: {},
   },
   isLoading: true,
 };
@@ -78,11 +117,18 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        const customLayouts = parsed.customLayouts || {
-          abc: DEFAULT_ABC_LAYOUT,
-          qwerty: DEFAULT_QWERTY_LAYOUT,
+        let customLayouts = parsed.customLayouts || {
+          abc: DEFAULT_ABC_KEYS,
+          qwerty: DEFAULT_QWERTY_KEYS,
         };
-        setPreferences({ ...defaultPreferences, ...parsed, customLayouts, isLoading: false });
+        if (customLayouts.abc && !customLayouts.abc.includes(SPECIAL_KEYS.SPACE)) {
+          customLayouts.abc = [...customLayouts.abc.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
+        }
+        if (customLayouts.qwerty && !customLayouts.qwerty.includes(SPECIAL_KEYS.SPACE)) {
+          customLayouts.qwerty = [...customLayouts.qwerty.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
+        }
+        const keySizes = parsed.keySizes || { abc: {}, qwerty: {} };
+        setPreferences({ ...defaultPreferences, ...parsed, customLayouts, keySizes, isLoading: false });
       } else {
         setPreferences({ ...defaultPreferences, isLoading: false });
       }
@@ -122,16 +168,35 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   };
 
   const resetCustomLayout = (layout: KeyboardLayout) => {
-    const defaultLayout = layout === "abc" ? DEFAULT_ABC_LAYOUT : DEFAULT_QWERTY_LAYOUT;
+    const defaultLayout = layout === "abc" ? DEFAULT_ABC_KEYS : DEFAULT_QWERTY_KEYS;
     const newCustomLayouts = {
       ...preferences.customLayouts,
       [layout]: defaultLayout,
     };
-    savePreferences({ customLayouts: newCustomLayouts });
+    const newKeySizes = {
+      ...preferences.keySizes,
+      [layout]: {},
+    };
+    savePreferences({ customLayouts: newCustomLayouts, keySizes: newKeySizes });
   };
 
   const getCustomLayout = (layout: KeyboardLayout): string[] => {
-    return preferences.customLayouts[layout] || (layout === "abc" ? DEFAULT_ABC_LAYOUT : DEFAULT_QWERTY_LAYOUT);
+    return preferences.customLayouts[layout] || (layout === "abc" ? DEFAULT_ABC_KEYS : DEFAULT_QWERTY_KEYS);
+  };
+
+  const setKeySize = (layout: KeyboardLayout, key: string, size: KeySize) => {
+    const newKeySizes = {
+      ...preferences.keySizes,
+      [layout]: {
+        ...preferences.keySizes[layout],
+        [key]: size,
+      },
+    };
+    savePreferences({ keySizes: newKeySizes });
+  };
+
+  const getKeySize = (layout: KeyboardLayout, key: string): KeySize => {
+    return preferences.keySizes[layout]?.[key] || "medium";
   };
 
   return (
@@ -148,6 +213,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setCustomLayout,
         resetCustomLayout,
         getCustomLayout,
+        setKeySize,
+        getKeySize,
       }}
     >
       {children}
