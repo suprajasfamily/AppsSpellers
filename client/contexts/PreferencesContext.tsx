@@ -67,6 +67,9 @@ export interface VoiceSettings {
   rate: number;
   pitch: number;
   voiceId: string | null;
+  speakLettersOnType: boolean;
+  speakSentencesOnComplete: boolean;
+  sayAndAfterLetters: boolean;
 }
 
 interface Preferences {
@@ -125,6 +128,9 @@ const defaultPreferences: Preferences = {
     rate: 1.0,
     pitch: 1.0,
     voiceId: null,
+    speakLettersOnType: false,
+    speakSentencesOnComplete: false,
+    sayAndAfterLetters: false,
   },
   metronomeVolume: 0.5,
   metronomeBpm: 60,
