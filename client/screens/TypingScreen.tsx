@@ -89,13 +89,53 @@ export default function TypingScreen() {
     return false;
   }, []);
 
+  const speakLetter = useCallback((letter: string) => {
+    if (!voiceSettings.speakLettersOnType) return;
+    
+    const textToSpeak = voiceSettings.sayAndAfterLetters 
+      ? `${letter}... and` 
+      : letter;
+    
+    Speech.speak(textToSpeak, {
+      rate: voiceSettings.rate,
+      pitch: voiceSettings.pitch,
+      voice: voiceSettings.voiceId || undefined,
+    });
+  }, [voiceSettings]);
+
+  const speakSentence = useCallback((fullText: string) => {
+    if (!voiceSettings.speakSentencesOnComplete) return;
+    
+    const sentences = fullText.match(/[^.!?]*[.!?]/g);
+    if (!sentences || sentences.length === 0) return;
+    
+    const lastSentence = sentences[sentences.length - 1].trim();
+    if (lastSentence) {
+      setTimeout(() => {
+        Speech.speak(lastSentence, {
+          rate: voiceSettings.rate,
+          pitch: voiceSettings.pitch,
+          voice: voiceSettings.voiceId || undefined,
+        });
+      }, 300);
+    }
+  }, [voiceSettings]);
+
   const handleKeyPress = useCallback((key: string) => {
     const capitalize = shouldCapitalize(text);
     const processedKey = capitalize ? key.toUpperCase() : key.toLowerCase();
     const newText = text + processedKey;
     setText(newText);
     updateSuggestions(newText);
-  }, [text, updateSuggestions, shouldCapitalize]);
+    
+    if (/^[A-Za-z]$/.test(key)) {
+      speakLetter(processedKey);
+    }
+    
+    if (['.', '!', '?'].includes(key)) {
+      speakSentence(newText);
+    }
+  }, [text, updateSuggestions, shouldCapitalize, speakLetter, speakSentence]);
 
   const handleBackspace = useCallback(() => {
     const newText = text.slice(0, -1);

@@ -472,6 +472,85 @@ export default function SettingsScreen() {
                 {isTesting ? "Stop" : "Test Voice"}
               </Text>
             </Pressable>
+
+            <View style={styles.divider} />
+
+            <Text style={[styles.label, { color: theme.text }]}>Typing Feedback</Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.md }]}>
+              Voice feedback while typing helps kids learn letters
+            </Text>
+
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setVoiceSettings({ speakLettersOnType: !voiceSettings.speakLettersOnType });
+              }}
+              style={[styles.toggleRow, { backgroundColor: theme.backgroundSecondary }]}
+            >
+              <View style={styles.toggleInfo}>
+                <Text style={[styles.toggleLabel, { color: theme.text }]}>Speak Letters</Text>
+                <Text style={[styles.toggleHelp, { color: theme.tabIconDefault }]}>
+                  Read each letter aloud when typed
+                </Text>
+              </View>
+              <View style={[
+                styles.toggle, 
+                { backgroundColor: voiceSettings.speakLettersOnType ? theme.primary : theme.keyBorder }
+              ]}>
+                <View style={[
+                  styles.toggleKnob,
+                  { transform: [{ translateX: voiceSettings.speakLettersOnType ? 20 : 0 }] }
+                ]} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setVoiceSettings({ sayAndAfterLetters: !voiceSettings.sayAndAfterLetters });
+              }}
+              style={[styles.toggleRow, { backgroundColor: theme.backgroundSecondary, marginTop: Spacing.sm }]}
+            >
+              <View style={styles.toggleInfo}>
+                <Text style={[styles.toggleLabel, { color: theme.text }]}>Say "And"</Text>
+                <Text style={[styles.toggleHelp, { color: theme.tabIconDefault }]}>
+                  Say "and" after each letter (A... and... B... and...)
+                </Text>
+              </View>
+              <View style={[
+                styles.toggle, 
+                { backgroundColor: voiceSettings.sayAndAfterLetters ? theme.primary : theme.keyBorder }
+              ]}>
+                <View style={[
+                  styles.toggleKnob,
+                  { transform: [{ translateX: voiceSettings.sayAndAfterLetters ? 20 : 0 }] }
+                ]} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setVoiceSettings({ speakSentencesOnComplete: !voiceSettings.speakSentencesOnComplete });
+              }}
+              style={[styles.toggleRow, { backgroundColor: theme.backgroundSecondary, marginTop: Spacing.sm }]}
+            >
+              <View style={styles.toggleInfo}>
+                <Text style={[styles.toggleLabel, { color: theme.text }]}>Read Sentences</Text>
+                <Text style={[styles.toggleHelp, { color: theme.tabIconDefault }]}>
+                  Read sentence aloud when you type a period
+                </Text>
+              </View>
+              <View style={[
+                styles.toggle, 
+                { backgroundColor: voiceSettings.speakSentencesOnComplete ? theme.primary : theme.keyBorder }
+              ]}>
+                <View style={[
+                  styles.toggleKnob,
+                  { transform: [{ translateX: voiceSettings.speakSentencesOnComplete ? 20 : 0 }] }
+                ]} />
+              </View>
+            </Pressable>
           </View>
         </View>
 
@@ -863,5 +942,38 @@ const styles = StyleSheet.create({
   voicePresetDesc: {
     fontSize: Typography.small.fontSize,
     textAlign: "center",
+  },
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.sm,
+  },
+  toggleInfo: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  toggleLabel: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "500",
+  },
+  toggleHelp: {
+    fontSize: Typography.small.fontSize,
+    marginTop: 2,
+  },
+  toggle: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    padding: 2,
+    justifyContent: "center",
+  },
+  toggleKnob: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
   },
 });
