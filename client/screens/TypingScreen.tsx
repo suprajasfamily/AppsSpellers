@@ -153,7 +153,21 @@ export default function TypingScreen() {
     const newText = text + "\n";
     setText(newText);
     updateSuggestions(newText);
-  }, [text, updateSuggestions]);
+    
+    if (voiceSettings.speakSentencesOnComplete && text.trim()) {
+      const lines = text.split('\n');
+      const lastLine = lines[lines.length - 1].trim();
+      if (lastLine) {
+        setTimeout(() => {
+          Speech.speak(lastLine, {
+            rate: voiceSettings.rate,
+            pitch: voiceSettings.pitch,
+            voice: voiceSettings.voiceId || undefined,
+          });
+        }, 300);
+      }
+    }
+  }, [text, updateSuggestions, voiceSettings]);
 
   const handleSuggestionPress = useCallback((word: string) => {
     const words = text.trim().split(/\s+/);
