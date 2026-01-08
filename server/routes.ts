@@ -1,8 +1,18 @@
 import type { Express } from "express";
 import { createServer, type Server } from "node:http";
 import { createOrUpdateTypeBuddyDocument, checkGoogleDriveConnection } from "./lib/googleDrive";
+import * as path from "path";
+import * as fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.get("/download-project", (_req, res) => {
+    const zipPath = path.resolve(process.cwd(), "letterboard-spellerbuddy-export.zip");
+    if (fs.existsSync(zipPath)) {
+      res.download(zipPath, "letterboard-spellerbuddy.zip");
+    } else {
+      res.status(404).send("Export file not found");
+    }
+  });
   app.get("/api/google-drive/status", async (_req, res) => {
     try {
       const connected = await checkGoogleDriveConnection();
