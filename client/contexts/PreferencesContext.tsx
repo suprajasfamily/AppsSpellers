@@ -59,6 +59,29 @@ export const DEFAULT_GRID_KEYS = [
 
 export const GRID_ROW_SIZES = [6, 6, 6, 7, 7];
 
+function isGridLayoutOutdated(storedKeys: string[]): boolean {
+  const requiredKeys = [SPECIAL_KEYS.DELETE, SPECIAL_KEYS.ENTER, ",", "!", "?", "."];
+  const invalidKeys = ["'", ":", "#", SPECIAL_KEYS.SPACE];
+  
+  for (const required of requiredKeys) {
+    if (!storedKeys.includes(required)) {
+      return true;
+    }
+  }
+  
+  for (const invalid of invalidKeys) {
+    if (storedKeys.includes(invalid)) {
+      return true;
+    }
+  }
+  
+  if (storedKeys.length !== DEFAULT_GRID_KEYS.length) {
+    return true;
+  }
+  
+  return false;
+}
+
 export interface KeySizeMap {
   [key: string]: KeySize;
 }
@@ -172,7 +195,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
           qwerty: DEFAULT_QWERTY_KEYS,
           grid: DEFAULT_GRID_KEYS,
         };
-        if (!customLayouts.grid) {
+        if (!customLayouts.grid || isGridLayoutOutdated(customLayouts.grid)) {
           customLayouts.grid = DEFAULT_GRID_KEYS;
         }
         if (customLayouts.abc) {
