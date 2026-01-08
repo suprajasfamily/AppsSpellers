@@ -51,14 +51,13 @@ export const QWERTY_ROW_SIZES = [10, 9, 7, 4];
 
 export const DEFAULT_GRID_KEYS = [
   "A", "B", "C", "D", "E", SPECIAL_KEYS.DELETE,
-  "F", "G", "H", "I", "J", "!",
-  "K", "L", "M", "N", "O", "?",
-  "P", "Q", "R", "S", "T", ".",
-  "U", "V", "W", "X", "Y", "Z",
-  SPECIAL_KEYS.ENTER, SPECIAL_KEYS.SPACE,
+  "F", "G", "H", "I", "J", ",",
+  "K", "L", "M", "N", "O", "!",
+  "P", "Q", "R", "S", "T", "?",
+  "U", "V", "W", "X", "Y", "Z", SPECIAL_KEYS.ENTER,
 ];
 
-export const GRID_ROW_SIZES = [6, 6, 6, 6, 6, 2];
+export const GRID_ROW_SIZES = [6, 6, 6, 6, 7];
 
 export interface KeySizeMap {
   [key: string]: KeySize;
