@@ -181,8 +181,10 @@ function DraggableKey({
     zIndex: zIndex.value,
   }));
 
-  const buttonColor = isSpecialKey ? theme.specialKey : getButtonColor();
-  const textColor = isSpecialKey ? theme.text : getButtonTextColor();
+  const { keyboardLayout } = usePreferences();
+  const isGridLayout = keyboardLayout === "grid";
+  const buttonColor = isGridLayout ? getButtonColor() : (isSpecialKey ? theme.specialKey : getButtonColor());
+  const textColor = isGridLayout ? getButtonTextColor() : (isSpecialKey ? theme.text : getButtonTextColor());
 
   const getKeyDisplay = () => {
     switch (keyLabel) {
@@ -205,11 +207,13 @@ function DraggableKey({
           animatedStyle,
           {
             backgroundColor: buttonColor,
-            borderColor: theme.keyBorder,
-            width: keyLabel === SPECIAL_KEYS.SPACE ? keyWidth * 2.5 : keyWidth,
-            minHeight: 44 * sizeMultiplier,
-            marginHorizontal: keyMargin.horizontal,
-            marginVertical: keyMargin.vertical,
+            borderColor: isGridLayout ? buttonColor : theme.keyBorder,
+            width: keyLabel === SPECIAL_KEYS.SPACE ? (isGridLayout ? keyWidth * 5 : keyWidth * 2.5) : keyWidth,
+            minHeight: isGridLayout ? 60 * sizeMultiplier : 44 * sizeMultiplier,
+            marginHorizontal: isGridLayout ? 0 : keyMargin.horizontal,
+            marginVertical: isGridLayout ? 0 : keyMargin.vertical,
+            borderRadius: isGridLayout ? 2 : BorderRadius.xs,
+            borderWidth: isGridLayout ? 0.5 : 1,
           },
           isCustomizing && styles.customizingKey,
           isDragging && styles.draggingKey,
@@ -302,7 +306,8 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   const rowSizes = keyboardLayout === "abc" ? ABC_ROW_SIZES : keyboardLayout === "qwerty" ? QWERTY_ROW_SIZES : GRID_ROW_SIZES;
   const layout = useMemo(() => chunkArray(customKeys, rowSizes), [customKeys, rowSizes]);
 
-  const keyboardHeight = height * KeyboardSizes[keyboardSize];
+  const isGridLayout = keyboardLayout === "grid";
+  const keyboardHeight = isGridLayout ? height * 0.75 : height * KeyboardSizes[keyboardSize];
   const maxKeysInRow = Math.max(...rowSizes);
   const spacing = KEY_SPACING_VALUES[keySpacing];
   const getBaseKeyWidth = () => {
@@ -310,7 +315,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
       case "abc":
         return (width - Spacing.lg * 2 - 5 * (spacing.horizontal * 2)) / 5;
       case "grid":
-        return (width - Spacing.lg * 2 - 7 * (spacing.horizontal * 2)) / 7;
+        return (width - Spacing.sm * 2) / 6;
       default:
         return (width - Spacing.lg * 2 - maxKeysInRow * (spacing.horizontal * 2)) / maxKeysInRow;
     }
@@ -377,7 +382,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   let keyIndex = 0;
 
   return (
-    <View style={[styles.container, { height: keyboardHeight }]}>
+    <View style={[styles.container, { height: keyboardHeight }, isGridLayout && styles.gridContainer]}>
       <View style={styles.topBar}>
         <View style={styles.leftButtons}>
           <Pressable
@@ -441,9 +446,9 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
         </Text>
       ) : null}
 
-      <View style={styles.keysContainer}>
+      <View style={[styles.keysContainer, isGridLayout && styles.gridKeysContainer]}>
         {layout.map((row, rowIndex) => (
-          <View key={rowIndex} style={[styles.row, { marginVertical: spacing.vertical / 2 }]}>
+          <View key={rowIndex} style={[styles.row, { marginVertical: isGridLayout ? 0 : spacing.vertical / 2 }]}>
             {row.map((key) => {
               const currentIndex = keyIndex++;
               const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
@@ -490,6 +495,10 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: Spacing.sm,
     paddingBottom: Spacing.sm,
+  },
+  gridContainer: {
+    paddingHorizontal: Spacing.xs,
+    paddingBottom: 0,
   },
   topBar: {
     flexDirection: "row",
@@ -546,6 +555,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     zIndex: 1,
+  },
+  gridKeysContainer: {
+    justifyContent: "flex-start",
+    paddingTop: Spacing.xs,
   },
   row: {
     flexDirection: "row",
