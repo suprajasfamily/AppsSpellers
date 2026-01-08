@@ -191,9 +191,17 @@ function DraggableKey({
       case SPECIAL_KEYS.SPACE:
         return <Text style={[styles.keyText, { color: textColor }]}>space</Text>;
       case SPECIAL_KEYS.ENTER:
-        return <Feather name="corner-down-left" size={20} color={textColor} />;
+        return isGridLayout ? (
+          <Text style={[styles.keyText, { color: textColor }]}>Enter</Text>
+        ) : (
+          <Feather name="corner-down-left" size={20} color={textColor} />
+        );
       case SPECIAL_KEYS.DELETE:
-        return <Feather name="delete" size={20} color={textColor} />;
+        return isGridLayout ? (
+          <Text style={[styles.keyText, { color: textColor }]}>Delete</Text>
+        ) : (
+          <Feather name="delete" size={20} color={textColor} />
+        );
       default:
         return <Text style={[styles.keyText, { color: textColor }]}>{keyLabel}</Text>;
     }
