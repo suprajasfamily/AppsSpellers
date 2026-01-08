@@ -218,7 +218,7 @@ function DraggableKey({
           {
             backgroundColor: buttonColor,
             borderColor: isGridLayout ? "#000000" : theme.keyBorder,
-            width: keyLabel === SPECIAL_KEYS.SPACE ? (isGridLayout ? keyWidth * 5 : keyWidth * 2.5) : keyWidth,
+            width: keyLabel === SPECIAL_KEYS.SPACE ? (isGridLayout ? keyWidth * 4 : keyWidth * 2.5) : keyWidth,
             minHeight: isGridLayout ? 60 * sizeMultiplier : 44 * sizeMultiplier,
             marginHorizontal: isGridLayout ? 0 : keyMargin.horizontal,
             marginVertical: isGridLayout ? 0 : keyMargin.vertical,
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   gridRowRight: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     width: "100%",
   },
   draggableKey: {
