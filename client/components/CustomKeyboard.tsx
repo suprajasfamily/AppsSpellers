@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   gridRowRight: {
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     width: "100%",
   },
   draggableKey: {
