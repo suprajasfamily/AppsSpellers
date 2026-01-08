@@ -326,7 +326,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
       case "abc":
         return (width - Spacing.lg * 2 - 5 * (spacing.horizontal * 2)) / 5;
       case "grid":
-        return (width - Spacing.sm * 2) / 7;
+        return (width - Spacing.sm * 2) / 6;
       default:
         return (width - Spacing.lg * 2 - maxKeysInRow * (spacing.horizontal * 2)) / maxKeysInRow;
     }
@@ -468,7 +468,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
               const currentIndex = keyIndex++;
               const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
               const isLastKeyInRow = keyIndexInRow === row.length - 1;
-              const shouldPushToRight = isGridLayout && isLastKeyInRow && row.length === 6;
+              const shouldPushToRight = false;
               return (
                 <DraggableKey
                   key={`${key}-${currentIndex}`}
