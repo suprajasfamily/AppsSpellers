@@ -54,15 +54,15 @@ export const DEFAULT_GRID_KEYS = [
   "F", "G", "H", "I", "J", ",",
   "K", "L", "M", "N", "O", "!",
   "P", "Q", "R", "S", "T", "?",
-  "U", "V", "W", "X", "Y",
+  "U", "V", "W", "X", "Y", ".",
   "Z", SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
 ];
 
-export const GRID_ROW_SIZES = [6, 6, 6, 6, 5, 3];
+export const GRID_ROW_SIZES = [6, 6, 6, 6, 6, 3];
 
 function isGridLayoutOutdated(storedKeys: string[]): boolean {
-  const requiredKeys = [SPECIAL_KEYS.DELETE, SPECIAL_KEYS.ENTER, SPECIAL_KEYS.SPACE, ",", "!", "?"];
-  const invalidKeys = ["'", ":", "#", "."];
+  const requiredKeys = [SPECIAL_KEYS.DELETE, SPECIAL_KEYS.ENTER, SPECIAL_KEYS.SPACE, ",", "!", "?", "."];
+  const invalidKeys = ["'", ":", "#"];
   
   for (const required of requiredKeys) {
     if (!storedKeys.includes(required)) {
