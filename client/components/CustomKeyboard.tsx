@@ -83,6 +83,7 @@ interface DraggableKeyProps {
   keySize: KeySize;
   isSpecialKey: boolean;
   keyMargin: { horizontal: number; vertical: number };
+  pushToRight?: boolean;
 }
 
 function DraggableKey({
@@ -100,6 +101,7 @@ function DraggableKey({
   keySize,
   isSpecialKey,
   keyMargin,
+  pushToRight = false,
 }: DraggableKeyProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -215,12 +217,13 @@ function DraggableKey({
           animatedStyle,
           {
             backgroundColor: buttonColor,
-            borderColor: isGridLayout ? buttonColor : theme.keyBorder,
+            borderColor: isGridLayout ? "#000000" : theme.keyBorder,
             width: keyLabel === SPECIAL_KEYS.SPACE ? (isGridLayout ? keyWidth * 5 : keyWidth * 2.5) : keyWidth,
             minHeight: isGridLayout ? 60 * sizeMultiplier : 44 * sizeMultiplier,
             marginHorizontal: isGridLayout ? 0 : keyMargin.horizontal,
             marginVertical: isGridLayout ? 0 : keyMargin.vertical,
-            borderRadius: isGridLayout ? 2 : BorderRadius.xs,
+            marginLeft: pushToRight ? "auto" : undefined,
+            borderRadius: isGridLayout ? 0 : BorderRadius.xs,
             borderWidth: isGridLayout ? 0.5 : 1,
           },
           isCustomizing && styles.customizingKey,
@@ -461,9 +464,11 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
             { marginVertical: isGridLayout ? 0 : spacing.vertical / 2 },
             isGridLayout && styles.gridRow
           ]}>
-            {row.map((key) => {
+            {row.map((key, keyIndexInRow) => {
               const currentIndex = keyIndex++;
               const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
+              const isLastKeyInRow = keyIndexInRow === row.length - 1;
+              const shouldPushToRight = isGridLayout && isLastKeyInRow && row.length === 6 && rowIndex < 5;
               return (
                 <DraggableKey
                   key={`${key}-${currentIndex}`}
@@ -481,6 +486,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
                   keySize={getKeySize(keyboardLayout, key)}
                   isSpecialKey={isSpecial}
                   keyMargin={spacing}
+                  pushToRight={shouldPushToRight}
                 />
               );
             })}
@@ -578,7 +584,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   gridRow: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     width: "100%",
   },
   draggableKey: {
