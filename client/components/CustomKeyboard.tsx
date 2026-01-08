@@ -468,7 +468,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
               const currentIndex = keyIndex++;
               const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
               const isLastKeyInRow = keyIndexInRow === row.length - 1;
-              const shouldPushToRight = false;
+              const shouldPushToRight = isGridLayout && isLastKeyInRow && row.length === 6;
               return (
                 <DraggableKey
                   key={`${key}-${currentIndex}`}
