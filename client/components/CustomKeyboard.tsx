@@ -219,8 +219,7 @@ function DraggableKey({
             backgroundColor: buttonColor,
             borderColor: isGridLayout ? "#000000" : theme.keyBorder,
             width: keyLabel === SPECIAL_KEYS.SPACE ? (isGridLayout ? keyWidth * 5 : keyWidth * 2.5) : keyWidth,
-            minHeight: isGridLayout ? undefined : 44 * sizeMultiplier,
-            alignSelf: isGridLayout ? "stretch" : undefined,
+            minHeight: isGridLayout ? 60 * sizeMultiplier : 44 * sizeMultiplier,
             marginHorizontal: isGridLayout ? 0 : keyMargin.horizontal,
             marginVertical: isGridLayout ? 0 : keyMargin.vertical,
             marginLeft: pushToRight ? "auto" : undefined,
@@ -463,7 +462,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
           <View key={rowIndex} style={[
             styles.row, 
             { marginVertical: isGridLayout ? 0 : spacing.vertical / 2 },
-            isGridLayout && [styles.gridRow, { flex: 1 }]
+            isGridLayout && styles.gridRow
           ]}>
             {row.map((key, keyIndexInRow) => {
               const currentIndex = keyIndex++;
@@ -576,7 +575,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   gridKeysContainer: {
-    flex: 1,
     justifyContent: "flex-start",
     paddingTop: 0,
   },
@@ -587,7 +585,6 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     justifyContent: "flex-start",
-    alignItems: "stretch",
     width: "100%",
   },
   draggableKey: {
