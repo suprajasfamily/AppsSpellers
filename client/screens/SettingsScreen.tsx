@@ -272,10 +272,10 @@ export default function SettingsScreen() {
           <View style={[styles.card, { backgroundColor: theme.backgroundDefault }]}>
             <Text style={[styles.label, { color: theme.text }]}>Default Layout</Text>
             <SegmentedControl
-              options={["abc", "qwerty"]}
+              options={["abc", "qwerty", "grid"]}
               selectedValue={keyboardLayout}
               onValueChange={(value: KeyboardLayout) => setKeyboardLayout(value)}
-              labels={["ABC", "QWERTY"]}
+              labels={["ABC", "QWERTY", "Grid"]}
             />
 
             <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
@@ -347,6 +347,17 @@ export default function SettingsScreen() {
               >
                 <Feather name="rotate-ccw" size={16} color={theme.text} />
                 <Text style={[styles.resetButtonText, { color: theme.text }]}>Reset QWERTY</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  resetCustomLayout("grid");
+                }}
+                style={[styles.resetButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.keyBorder }]}
+                accessibilityLabel="Reset Grid layout"
+              >
+                <Feather name="rotate-ccw" size={16} color={theme.text} />
+                <Text style={[styles.resetButtonText, { color: theme.text }]}>Reset Grid</Text>
               </Pressable>
             </View>
           </View>

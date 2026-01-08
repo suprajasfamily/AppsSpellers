@@ -16,6 +16,7 @@ import {
   SPECIAL_KEYS, 
   ABC_ROW_SIZES, 
   QWERTY_ROW_SIZES,
+  GRID_ROW_SIZES,
   KeySize,
   KEY_SPACING_VALUES,
 } from "@/contexts/PreferencesContext";
@@ -298,19 +299,38 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   const [selectedKeyForSize, setSelectedKeyForSize] = useState<string | null>(null);
 
   const customKeys = useMemo(() => getCustomLayout(keyboardLayout), [keyboardLayout, getCustomLayout]);
-  const rowSizes = keyboardLayout === "abc" ? ABC_ROW_SIZES : QWERTY_ROW_SIZES;
+  const rowSizes = keyboardLayout === "abc" ? ABC_ROW_SIZES : keyboardLayout === "qwerty" ? QWERTY_ROW_SIZES : GRID_ROW_SIZES;
   const layout = useMemo(() => chunkArray(customKeys, rowSizes), [customKeys, rowSizes]);
 
   const keyboardHeight = height * KeyboardSizes[keyboardSize];
   const maxKeysInRow = Math.max(...rowSizes);
   const spacing = KEY_SPACING_VALUES[keySpacing];
-  const baseKeyWidth = keyboardLayout === "abc" 
-    ? (width - Spacing.lg * 2 - 5 * (spacing.horizontal * 2)) / 5
-    : (width - Spacing.lg * 2 - maxKeysInRow * (spacing.horizontal * 2)) / maxKeysInRow;
+  const getBaseKeyWidth = () => {
+    switch (keyboardLayout) {
+      case "abc":
+        return (width - Spacing.lg * 2 - 5 * (spacing.horizontal * 2)) / 5;
+      case "grid":
+        return (width - Spacing.lg * 2 - 7 * (spacing.horizontal * 2)) / 7;
+      default:
+        return (width - Spacing.lg * 2 - maxKeysInRow * (spacing.horizontal * 2)) / maxKeysInRow;
+    }
+  };
+  const baseKeyWidth = getBaseKeyWidth();
 
   const toggleLayout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setKeyboardLayout(keyboardLayout === "abc" ? "qwerty" : "abc");
+    const layouts: KeyboardLayout[] = ["abc", "qwerty", "grid"];
+    const currentIndex = layouts.indexOf(keyboardLayout);
+    const nextIndex = (currentIndex + 1) % layouts.length;
+    setKeyboardLayout(layouts[nextIndex]);
+  };
+
+  const getLayoutDisplayName = () => {
+    switch (keyboardLayout) {
+      case "abc": return "ABC";
+      case "qwerty": return "QWERTY";
+      case "grid": return "Grid";
+    }
   };
 
   const toggleCustomize = () => {
@@ -363,10 +383,10 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
           <Pressable
             onPress={toggleLayout}
             style={[styles.toggleButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder }]}
-            accessibilityLabel={`Switch to ${keyboardLayout === "abc" ? "QWERTY" : "ABC"} layout`}
+            accessibilityLabel={`Switch keyboard layout, currently ${getLayoutDisplayName()}`}
           >
             <Text style={[styles.toggleText, { color: theme.text }]}>
-              {keyboardLayout === "abc" ? "ABC" : "QWERTY"}
+              {getLayoutDisplayName()}
             </Text>
             <Feather name="refresh-cw" size={14} color={theme.text} style={styles.toggleIcon} />
           </Pressable>

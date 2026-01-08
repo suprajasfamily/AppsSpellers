@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export type KeyboardLayout = "abc" | "qwerty";
+export type KeyboardLayout = "abc" | "qwerty" | "grid";
 export type SizeOption = "small" | "medium" | "large";
 export type AppMode = "keyboard" | "calculator";
 export type KeySize = "small" | "medium" | "large";
@@ -49,6 +49,17 @@ export const DEFAULT_QWERTY_KEYS = [
 export const ABC_ROW_SIZES = [5, 5, 5, 5, 5, 4];
 export const QWERTY_ROW_SIZES = [10, 9, 7, 4];
 
+export const DEFAULT_GRID_KEYS = [
+  "A", "B", "C", "D", "E", SPECIAL_KEYS.DELETE,
+  "F", "G", "H", "I", "J", "'", "!",
+  "K", "L", "M", "N", "O", "?",
+  "P", "Q", "R", "S", "T", ".", ":",
+  "U", "V", "W", "X", "Y", "Z", SPECIAL_KEYS.ENTER,
+  "#", SPECIAL_KEYS.SPACE,
+];
+
+export const GRID_ROW_SIZES = [6, 7, 6, 7, 7, 2];
+
 export interface KeySizeMap {
   [key: string]: KeySize;
 }
@@ -56,11 +67,13 @@ export interface KeySizeMap {
 interface CustomLayouts {
   abc: string[];
   qwerty: string[];
+  grid: string[];
 }
 
 interface KeySizes {
   abc: KeySizeMap;
   qwerty: KeySizeMap;
+  grid: KeySizeMap;
 }
 
 export interface VoiceSettings {
@@ -119,10 +132,12 @@ const defaultPreferences: Preferences = {
   customLayouts: {
     abc: DEFAULT_ABC_KEYS,
     qwerty: DEFAULT_QWERTY_KEYS,
+    grid: DEFAULT_GRID_KEYS,
   },
   keySizes: {
     abc: {},
     qwerty: {},
+    grid: {},
   },
   voiceSettings: {
     rate: 1.0,
@@ -156,7 +171,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         let customLayouts = parsed.customLayouts || {
           abc: DEFAULT_ABC_KEYS,
           qwerty: DEFAULT_QWERTY_KEYS,
+          grid: DEFAULT_GRID_KEYS,
         };
+        if (!customLayouts.grid) {
+          customLayouts.grid = DEFAULT_GRID_KEYS;
+        }
         if (customLayouts.abc) {
           const abcWithoutDelete = customLayouts.abc.filter((k: string) => k !== SPECIAL_KEYS.DELETE);
           if (!abcWithoutDelete.includes(SPECIAL_KEYS.SPACE) || !abcWithoutDelete.includes(SPECIAL_KEYS.ENTER)) {
@@ -168,7 +187,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         if (customLayouts.qwerty && !customLayouts.qwerty.includes(SPECIAL_KEYS.SPACE)) {
           customLayouts.qwerty = [...customLayouts.qwerty.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
         }
-        const keySizes = parsed.keySizes || { abc: {}, qwerty: {} };
+        const keySizes = parsed.keySizes || { abc: {}, qwerty: {}, grid: {} };
+        if (!keySizes.grid) {
+          keySizes.grid = {};
+        }
         setPreferences({ ...defaultPreferences, ...parsed, customLayouts, keySizes, isLoading: false });
       } else {
         setPreferences({ ...defaultPreferences, isLoading: false });
