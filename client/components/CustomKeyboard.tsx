@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   },
   gridKeysContainer: {
     justifyContent: "flex-start",
-    paddingTop: Spacing.xs,
+    paddingTop: 0,
   },
   row: {
     flexDirection: "row",
