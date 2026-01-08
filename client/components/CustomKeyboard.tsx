@@ -462,7 +462,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
           <View key={rowIndex} style={[
             styles.row, 
             { marginVertical: isGridLayout ? 0 : spacing.vertical / 2 },
-            isGridLayout ? (rowIndex === 5 ? styles.gridRowRight : styles.gridRow) : null
+            isGridLayout ? (rowIndex === layout.length - 1 ? styles.gridRowRight : styles.gridRow) : null
           ]}>
             {row.map((key, keyIndexInRow) => {
               const currentIndex = keyIndex++;
