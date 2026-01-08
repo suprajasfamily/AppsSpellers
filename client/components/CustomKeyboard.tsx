@@ -578,7 +578,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   gridRow: {
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
+    width: "100%",
   },
   draggableKey: {
     minWidth: 32,
