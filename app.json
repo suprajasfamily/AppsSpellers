@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "TypeBuddy",
-    "slug": "typebuddy",
+    "name": "Letterboard SpellerBuddy",
+    "slug": "letterboard-spellerbuddy",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
-    "scheme": "typebuddy",
+    "scheme": "letterboard-spellerbuddy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.typebuddy.app"
+      "bundleIdentifier": "com.letterboard.spellerbuddy"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "package": "com.typebuddy.app",
+      "package": "com.letterboard.spellerbuddy",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },

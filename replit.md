@@ -1,8 +1,8 @@
-# TypeBuddy
+# Letterboard SpellerBuddy
 
 ## Overview
 
-TypeBuddy is a React Native/Expo mobile application designed to help kids learn typing. It provides a kid-friendly typing interface with customizable keyboards (ABC alphabetical or QWERTY layouts), word suggestions, and a calculator mode. The app is a single-user utility without authentication, focusing on accessibility and ease of use for young learners.
+Letterboard SpellerBuddy is a React Native/Expo mobile application designed to help kids learn typing. It provides a kid-friendly typing interface with customizable keyboards (ABC alphabetical or QWERTY layouts), word suggestions, and a calculator mode. The app is a single-user utility without authentication, focusing on accessibility and ease of use for young learners.
 
 ## User Preferences
 
