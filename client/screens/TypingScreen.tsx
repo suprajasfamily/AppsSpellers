@@ -509,6 +509,7 @@ export default function TypingScreen() {
               onBackspace={handleBackspace}
               onClear={handleCalculatorClear}
               onEvaluate={handleCalculatorEvaluate}
+              expression={text}
             />
         )}
       </View>
