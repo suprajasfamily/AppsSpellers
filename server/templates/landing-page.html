@@ -495,7 +495,10 @@
         <div class="subscribe-section" id="subscribe">
           <h3>Join Our Community</h3>
           <p>Get updates on new features and tips for helping kids learn to type!</p>
-          <form class="subscribe-form" id="subscribe-form">
+          <form class="subscribe-form" id="subscribe-form" action="https://formsubmit.co/glowinnovation2024@gmail.com" method="POST">
+            <input type="hidden" name="_subject" value="New Letterboard SpellerBuddy Subscriber">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_next" value="BASE_URL_PLACEHOLDER?subscribed=true">
             <input type="text" name="name" placeholder="Your name" required />
             <input type="email" name="email" placeholder="Your email" required />
             <button type="submit">Subscribe</button>
@@ -574,35 +577,15 @@
           }, 500);
         }
 
-        // Subscribe form handling
-        const subscribeForm = document.getElementById("subscribe-form");
-        const subscribeSuccess = document.getElementById("subscribe-success");
-        
-        subscribeForm.addEventListener("submit", async function(e) {
-          e.preventDefault();
-          const formData = new FormData(subscribeForm);
-          const data = {
-            name: formData.get("name"),
-            email: formData.get("email")
-          };
-          
-          try {
-            const response = await fetch("/api/subscribe", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data)
-            });
-            
-            if (response.ok) {
-              subscribeForm.style.display = "none";
-              subscribeSuccess.style.display = "block";
-            } else {
-              alert("Something went wrong. Please try again.");
-            }
-          } catch (err) {
-            alert("Something went wrong. Please try again.");
-          }
-        });
+        // Check if returning from successful subscription
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('subscribed') === 'true') {
+          const subscribeForm = document.getElementById("subscribe-form");
+          const subscribeSuccess = document.getElementById("subscribe-success");
+          subscribeForm.style.display = "none";
+          subscribeSuccess.style.display = "block";
+          document.getElementById("subscribe").scrollIntoView({ behavior: "smooth" });
+        }
       })();
     </script>
   </body>
