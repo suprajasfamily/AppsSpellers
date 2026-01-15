@@ -201,6 +201,84 @@
         opacity: 0.9;
       }
 
+      .join-btn {
+        display: inline-block;
+        padding: 14px 32px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 30px;
+        text-decoration: none;
+        color: #fff;
+        background: linear-gradient(135deg, #4A90E2, #357ABD);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin: 24px 0;
+      }
+      .join-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+      }
+
+      .subscribe-section {
+        margin-top: 40px;
+        padding: 32px 24px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 16px;
+        scroll-margin-top: 20px;
+      }
+      .subscribe-section h3 {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        color: #222;
+      }
+      .subscribe-section p {
+        font-size: 14px;
+        color: #666;
+        margin: 0 0 20px 0;
+      }
+      .subscribe-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .subscribe-form input {
+        padding: 14px 16px;
+        font-size: 15px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .subscribe-form input:focus {
+        border-color: #4A90E2;
+      }
+      .subscribe-form button {
+        padding: 14px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        background: #4A90E2;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .subscribe-form button:hover {
+        background: #357ABD;
+      }
+      .subscribe-success {
+        display: none;
+        padding: 16px;
+        background: #d4edda;
+        border-radius: 8px;
+        color: #155724;
+        font-size: 15px;
+      }
+
       /* Desktop styles */
       @media (min-width: 768px) {
         body {
@@ -325,6 +403,27 @@
         .open-button:hover {
           background: #e0e0e0;
         }
+        .subscribe-section {
+          background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+        }
+        .subscribe-section h3 {
+          color: #f0f0f0;
+        }
+        .subscribe-section p {
+          color: #888;
+        }
+        .subscribe-form input {
+          background: #333;
+          border-color: #444;
+          color: #fff;
+        }
+        .subscribe-form input:focus {
+          border-color: #4A90E2;
+        }
+        .subscribe-success {
+          background: #1e3a2f;
+          color: #7dcea0;
+        }
       }
     </style>
   </head>
@@ -337,7 +436,9 @@
 
       <div class="content" id="content">
         <h1>APP_NAME_PLACEHOLDER</h1>
-        <p class="subtitle">Preview this app on your phone</p>
+        <p class="subtitle">A fun, kid-friendly typing assistant to help children learn spelling</p>
+        
+        <a href="#subscribe" class="join-btn">Join Our Community</a>
 
         <div class="steps-container">
           <div class="step">
@@ -388,6 +489,19 @@
             <a href="exps://EXPS_URL_PLACEHOLDER" class="open-button"
               >Open in Expo Go</a
             >
+          </div>
+        </div>
+
+        <div class="subscribe-section" id="subscribe">
+          <h3>Join Our Community</h3>
+          <p>Get updates on new features and tips for helping kids learn to type!</p>
+          <form class="subscribe-form" id="subscribe-form">
+            <input type="text" name="name" placeholder="Your name" required />
+            <input type="email" name="email" placeholder="Your email" required />
+            <button type="submit">Subscribe</button>
+          </form>
+          <div class="subscribe-success" id="subscribe-success">
+            Thank you for joining! We'll be in touch soon.
           </div>
         </div>
       </div>
@@ -459,6 +573,36 @@
             contentEl.style.display = "block";
           }, 500);
         }
+
+        // Subscribe form handling
+        const subscribeForm = document.getElementById("subscribe-form");
+        const subscribeSuccess = document.getElementById("subscribe-success");
+        
+        subscribeForm.addEventListener("submit", async function(e) {
+          e.preventDefault();
+          const formData = new FormData(subscribeForm);
+          const data = {
+            name: formData.get("name"),
+            email: formData.get("email")
+          };
+          
+          try {
+            const response = await fetch("/api/subscribe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+              subscribeForm.style.display = "none";
+              subscribeSuccess.style.display = "block";
+            } else {
+              alert("Something went wrong. Please try again.");
+            }
+          } catch (err) {
+            alert("Something went wrong. Please try again.");
+          }
+        });
       })();
     </script>
   </body>
