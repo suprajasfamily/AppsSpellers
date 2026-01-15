@@ -14,37 +14,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/subscribe", async (req, res) => {
-    try {
-      const { name, email } = req.body;
-      if (!name || !email) {
-        return res.status(400).json({ error: "Name and email are required" });
-      }
-      
-      const nodemailer = await import("nodemailer");
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
-
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: "glowinnovation2024@gmail.com",
-        subject: `New Subscriber: ${name}`,
-        text: `New subscriber!\n\nName: ${name}\nEmail: ${email}\n\nFrom Letterboard SpellerBuddy landing page.`,
-        html: `<h2>New Subscriber!</h2><p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><em>From Letterboard SpellerBuddy landing page.</em></p>`
-      });
-
-      res.json({ success: true });
-    } catch (error: any) {
-      console.error("Subscribe error:", error);
-      res.status(500).json({ error: error.message || "Failed to subscribe" });
-    }
-  });
-
   app.get("/api/google-drive/status", async (_req, res) => {
     try {
       const connected = await checkGoogleDriveConnection();
