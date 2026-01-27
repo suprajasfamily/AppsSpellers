@@ -450,7 +450,49 @@ export default function TypingScreen() {
           </View>
         </View>
 
-        {keyboardLayout === "qwerty" && mode === "keyboard" ? (
+        {keyboardLayout === "letterboard" && mode === "keyboard" ? (
+          <View
+            style={[
+              styles.typingArea,
+              {
+                flex: 1,
+                backgroundColor: theme.backgroundSecondary,
+                borderColor: theme.typingAreaBorder,
+              },
+            ]}
+          >
+            <TextInput
+              style={[
+                styles.letterboardTextInput,
+                {
+                  color: theme.text,
+                  fontFamily: Fonts?.sans || "System",
+                },
+              ]}
+              value={text}
+              onChangeText={(newText) => {
+                if (newText.length > text.length) {
+                  const newChar = newText.slice(-1);
+                  if (newChar !== ' ' && newChar !== '\n') {
+                    speakLetter(newChar);
+                  }
+                }
+                setText(newText);
+                updateSuggestions(newText);
+                if (newText.endsWith('.') || newText.endsWith('!') || newText.endsWith('?')) {
+                  speakSentence(newText);
+                }
+              }}
+              placeholder="Connect Bluetooth keyboard and start typing..."
+              placeholderTextColor={theme.tabIconDefault}
+              multiline
+              autoFocus
+              textAlignVertical="top"
+              autoCapitalize="sentences"
+              autoCorrect={true}
+            />
+          </View>
+        ) : keyboardLayout === "qwerty" && mode === "keyboard" ? (
           <View
             style={[
               styles.typingArea,
@@ -512,7 +554,7 @@ export default function TypingScreen() {
           </View>
         )}
 
-        {mode === "keyboard" && keyboardLayout !== "qwerty" ? (
+        {mode === "keyboard" && keyboardLayout !== "qwerty" && keyboardLayout !== "letterboard" ? (
           <>
             <View style={styles.suggestionsContainer}>
               <ScrollView
@@ -612,6 +654,14 @@ const styles = StyleSheet.create({
     fontWeight: Typography.typing.fontWeight,
     padding: Spacing.md,
     textAlignVertical: "top",
+  },
+  letterboardTextInput: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: "500",
+    padding: Spacing.lg,
+    textAlignVertical: "top",
+    lineHeight: 32,
   },
   suggestionsContainer: {
     height: 50,
