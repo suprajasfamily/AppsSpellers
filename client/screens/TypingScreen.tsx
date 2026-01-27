@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ScrollView,
   Text,
+  TextInput,
   Pressable,
   Alert,
   useWindowDimensions,
@@ -21,7 +22,7 @@ import { CustomKeyboard } from "@/components/CustomKeyboard";
 import { Calculator } from "@/components/Calculator";
 import { SuggestionPill } from "@/components/SuggestionPill";
 import { useTheme } from "@/hooks/useTheme";
-import { usePreferences, AppMode } from "@/contexts/PreferencesContext";
+import { usePreferences, AppMode, KeyboardLayout } from "@/contexts/PreferencesContext";
 import { getSuggestions } from "@/lib/wordSuggestions";
 import { evaluateExpression } from "@/lib/calculator";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
@@ -33,7 +34,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Typing">;
 export default function TypingScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { typingAreaSize, voiceSettings, metronomeVolume, metronomeBpm } = usePreferences();
+  const { typingAreaSize, voiceSettings, metronomeVolume, metronomeBpm, keyboardLayout, qwertyTextColor } = usePreferences();
   const navigation = useNavigation<NavigationProp>();
   const { height } = useWindowDimensions();
 
@@ -449,36 +450,69 @@ export default function TypingScreen() {
           </View>
         </View>
 
-        <View
-          style={[
-            styles.typingArea,
-            {
-              height: typingHeight,
-              backgroundColor: theme.typingAreaBg,
-              borderColor: theme.typingAreaBorder,
-            },
-          ]}
-        >
-          <ScrollView
-            style={styles.typingScroll}
-            contentContainerStyle={styles.typingContent}
-            showsVerticalScrollIndicator={true}
+        {keyboardLayout === "qwerty" && mode === "keyboard" ? (
+          <View
+            style={[
+              styles.typingArea,
+              {
+                flex: 1,
+                backgroundColor: theme.typingAreaBg,
+                borderColor: theme.typingAreaBorder,
+              },
+            ]}
           >
-            <Text
+            <TextInput
               style={[
-                styles.typingText,
+                styles.typingTextInput,
                 {
-                  color: theme.text,
+                  color: qwertyTextColor || theme.text,
                   fontFamily: Fonts?.sans || "System",
                 },
               ]}
+              value={text}
+              onChangeText={(newText) => {
+                setText(newText);
+                updateSuggestions(newText);
+              }}
+              placeholder="Tap here and start typing..."
+              placeholderTextColor={theme.tabIconDefault}
+              multiline
+              autoFocus
+              textAlignVertical="top"
+            />
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.typingArea,
+              {
+                height: typingHeight,
+                backgroundColor: theme.typingAreaBg,
+                borderColor: theme.typingAreaBorder,
+              },
+            ]}
+          >
+            <ScrollView
+              style={styles.typingScroll}
+              contentContainerStyle={styles.typingContent}
+              showsVerticalScrollIndicator={true}
             >
-              {text || "Start typing..."}
-            </Text>
-          </ScrollView>
-        </View>
+              <Text
+                style={[
+                  styles.typingText,
+                  {
+                    color: theme.text,
+                    fontFamily: Fonts?.sans || "System",
+                  },
+                ]}
+              >
+                {text || "Start typing..."}
+              </Text>
+            </ScrollView>
+          </View>
+        )}
 
-        {mode === "keyboard" ? (
+        {mode === "keyboard" && keyboardLayout !== "qwerty" ? (
           <>
             <View style={styles.suggestionsContainer}>
               <ScrollView
@@ -503,7 +537,7 @@ export default function TypingScreen() {
               onEnter={handleEnter}
             />
           </>
-        ) : (
+        ) : mode === "calculator" ? (
           <Calculator
               onCharacter={handleCalculatorCharacter}
               onBackspace={handleBackspace}
@@ -511,7 +545,7 @@ export default function TypingScreen() {
               onEvaluate={handleCalculatorEvaluate}
               expression={text}
             />
-        )}
+        ) : null}
       </View>
     </ThemedView>
   );
@@ -571,6 +605,13 @@ const styles = StyleSheet.create({
   typingText: {
     fontSize: Typography.typing.fontSize,
     fontWeight: Typography.typing.fontWeight,
+  },
+  typingTextInput: {
+    flex: 1,
+    fontSize: Typography.typing.fontSize,
+    fontWeight: Typography.typing.fontWeight,
+    padding: Spacing.md,
+    textAlignVertical: "top",
   },
   suggestionsContainer: {
     height: 50,
