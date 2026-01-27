@@ -21,6 +21,7 @@ import {
   KeySize,
   KEY_SPACING_VALUES,
   GridDimensions,
+  KEY_TEXT_SIZE_VALUES,
 } from "@/contexts/PreferencesContext";
 import { Spacing, KeyboardSizes, BorderRadius, Typography } from "@/constants/theme";
 
@@ -191,9 +192,10 @@ function DraggableKey({
     zIndex: zIndex.value,
   }));
 
-  const { keyboardLayout } = usePreferences();
+  const { keyboardLayout, keyTextSize } = usePreferences();
   const isGridLayout = keyboardLayout === "grid";
   const isFullscreenLayout = isGridLayout || isLetterboard;
+  const textFontSize = KEY_TEXT_SIZE_VALUES[keyTextSize];
   
   const getKeyButtonColor = () => {
     if (isLetterboard && letterboardBgColor) return letterboardBgColor;
@@ -213,23 +215,24 @@ function DraggableKey({
   const textColor = getKeyTextColor();
 
   const getKeyDisplay = () => {
+    const iconSize = Math.max(16, textFontSize);
     switch (keyLabel) {
       case SPECIAL_KEYS.SPACE:
-        return <Text style={[styles.keyText, { color: textColor }]}>space</Text>;
+        return <Text style={[styles.keyText, { color: textColor, fontSize: textFontSize }]}>space</Text>;
       case SPECIAL_KEYS.ENTER:
         return isGridLayout ? (
-          <Text style={[styles.keyText, { color: textColor }]}>Enter</Text>
+          <Text style={[styles.keyText, { color: textColor, fontSize: textFontSize }]}>Enter</Text>
         ) : (
-          <Feather name="corner-down-left" size={20} color={textColor} />
+          <Feather name="corner-down-left" size={iconSize} color={textColor} />
         );
       case SPECIAL_KEYS.DELETE:
         return isGridLayout ? (
-          <Text style={[styles.keyText, { color: textColor }]}>Delete</Text>
+          <Text style={[styles.keyText, { color: textColor, fontSize: textFontSize }]}>Delete</Text>
         ) : (
-          <Feather name="delete" size={20} color={textColor} />
+          <Feather name="delete" size={iconSize} color={textColor} />
         );
       default:
-        return <Text style={[styles.keyText, { color: textColor }]}>{keyLabel}</Text>;
+        return <Text style={[styles.keyText, { color: textColor, fontSize: textFontSize }]}>{keyLabel}</Text>;
     }
   };
 

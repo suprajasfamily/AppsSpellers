@@ -22,6 +22,7 @@ import {
   KeyboardLayout,
   SizeOption,
   KeySpacing,
+  KeyTextSize,
   BUTTON_COLORS,
   LETTERBOARD_COLORS,
   LETTERBOARD_TEXT_COLORS,
@@ -51,6 +52,7 @@ const avatars = [
 
 const sizeOptions: SizeOption[] = ["small", "medium", "large"];
 const spacingOptions: KeySpacing[] = ["tight", "normal", "wide"];
+const textSizeOptions: KeyTextSize[] = ["small", "medium", "large"];
 
 function SegmentedControl({
   options,
@@ -138,6 +140,7 @@ export default function SettingsScreen() {
     keyboardSize,
     typingAreaSize,
     keySpacing,
+    keyTextSize,
     displayName,
     avatarId,
     buttonColorId,
@@ -150,6 +153,7 @@ export default function SettingsScreen() {
     setKeyboardSize,
     setTypingAreaSize,
     setKeySpacing,
+    setKeyTextSize,
     setDisplayName,
     setAvatarId,
     setButtonColorId,
@@ -317,6 +321,19 @@ export default function SettingsScreen() {
               selectedValue={keySpacing}
               onValueChange={(value: KeySpacing) => setKeySpacing(value)}
               labels={["Tight", "Normal", "Wide"]}
+            />
+
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              Key Text Size
+            </Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.sm }]}>
+              Make the letters and numbers on keys bigger or smaller
+            </Text>
+            <SegmentedControl
+              options={textSizeOptions}
+              selectedValue={keyTextSize}
+              onValueChange={(value: KeyTextSize) => setKeyTextSize(value)}
+              labels={["Small", "Medium", "Large"]}
             />
 
             <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
