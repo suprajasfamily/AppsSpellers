@@ -135,9 +135,8 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate, expr
 
   const keyboardHeight = height * KeyboardSizes[keyboardSize];
   const numColumns = 3;
-  const gridPadding = Spacing.xs;
-  const buttonWidth = (width - gridPadding * 2) / numColumns;
-  const buttonHeight = showGraph ? 40 : (keyboardHeight - 60) / 7;
+  const buttonWidth = width / numColumns;
+  const buttonHeight = showGraph ? 40 : (keyboardHeight - 40) / 7;
 
   const graphPoints = useMemo(() => {
     if (!showGraph || !expression.toLowerCase().includes('x')) {
@@ -236,7 +235,7 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate, expr
                 styles.gridButtonText, 
                 { 
                   color: btn === "=" ? "#FFFFFF" : theme.text,
-                  fontSize: btn.length > 2 ? 12 : 18,
+                  fontSize: btn.length > 3 ? 24 : btn.length > 1 ? 36 : 48,
                 }
               ]}>
                 {btn}
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   page: {
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: 0,
   },
   gridRow: {
     flexDirection: "row",
