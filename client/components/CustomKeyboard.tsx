@@ -20,6 +20,7 @@ import {
   LETTERBOARD_ROW_SIZES,
   KeySize,
   KEY_SPACING_VALUES,
+  GridDimensions,
 } from "@/contexts/PreferencesContext";
 import { Spacing, KeyboardSizes, BorderRadius, Typography } from "@/constants/theme";
 
@@ -332,11 +333,24 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
     resetCustomLayout,
     getKeySize,
     setKeySize,
+    gridDimensions,
+    setGridDimensions,
   } = usePreferences();
   const { width, height } = useWindowDimensions();
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [sizeModalVisible, setSizeModalVisible] = useState(false);
   const [selectedKeyForSize, setSelectedKeyForSize] = useState<string | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
+
+  const gridWidth = useSharedValue(gridDimensions?.width ?? width * 0.9);
+  const gridHeight = useSharedValue(gridDimensions?.height ?? height * 0.75);
+  const gridX = useSharedValue(gridDimensions?.x ?? (width - (gridDimensions?.width ?? width * 0.9)) / 2);
+  const gridY = useSharedValue(gridDimensions?.y ?? height * 0.15);
+  
+  const startWidth = useSharedValue(0);
+  const startHeight = useSharedValue(0);
+  const startX = useSharedValue(0);
+  const startY = useSharedValue(0);
 
   const customKeys = useMemo(() => getCustomLayout(keyboardLayout), [keyboardLayout, getCustomLayout]);
   const getRowSizes = () => {
@@ -395,6 +409,54 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     resetCustomLayout(keyboardLayout);
   };
+
+  const saveGridDimensions = () => {
+    setGridDimensions({
+      width: gridWidth.value,
+      height: gridHeight.value,
+      x: gridX.value,
+      y: gridY.value,
+    });
+  };
+
+  const dragGesture = Gesture.Pan()
+    .onStart(() => {
+      startX.value = gridX.value;
+      startY.value = gridY.value;
+    })
+    .onUpdate((event) => {
+      gridX.value = Math.max(0, Math.min(width - gridWidth.value, startX.value + event.translationX));
+      gridY.value = Math.max(0, Math.min(height - gridHeight.value, startY.value + event.translationY));
+    })
+    .onEnd(() => {
+      runOnJS(saveGridDimensions)();
+    });
+
+  const resizeGesture = Gesture.Pan()
+    .onStart(() => {
+      startWidth.value = gridWidth.value;
+      startHeight.value = gridHeight.value;
+      runOnJS(setIsResizing)(true);
+    })
+    .onUpdate((event) => {
+      const newWidth = Math.max(200, Math.min(width - gridX.value, startWidth.value + event.translationX));
+      const newHeight = Math.max(200, Math.min(height - gridY.value, startHeight.value + event.translationY));
+      gridWidth.value = newWidth;
+      gridHeight.value = newHeight;
+    })
+    .onEnd(() => {
+      runOnJS(setIsResizing)(false);
+      runOnJS(saveGridDimensions)();
+    });
+
+  const gridAnimatedStyle = useAnimatedStyle(() => ({
+    width: gridWidth.value,
+    height: gridHeight.value,
+    transform: [
+      { translateX: gridX.value },
+      { translateY: gridY.value },
+    ],
+  }));
 
   const handleSwap = useCallback((fromIndex: number, toIndex: number) => {
     const newKeys = [...customKeys];
@@ -476,23 +538,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
             );
           })}
         </View>
-        <View style={[styles.letterboardBottomBar, { backgroundColor: getLetterboardBgColor() }]}>
-          <Pressable
-            onPress={toggleLayout}
-            style={styles.letterboardBottomButton}
-            accessibilityLabel={`Switch keyboard layout`}
-          >
-            <Feather name="refresh-cw" size={12} color={getLetterboardTextColor()} />
-          </Pressable>
-          <Pressable
-            onPress={toggleCustomize}
-            style={styles.letterboardBottomButton}
-            accessibilityLabel={isCustomizing ? "Done customizing" : "Customize keyboard"}
-          >
-            <Feather name={isCustomizing ? "check" : "settings"} size={12} color={getLetterboardTextColor()} />
-          </Pressable>
-        </View>
-        <KeySizeModal
+          <KeySizeModal
           visible={sizeModalVisible}
           onClose={() => setSizeModalVisible(false)}
           currentSize={selectedKeyForSize ? getKeySize(keyboardLayout, selectedKeyForSize) : "medium"}
@@ -509,74 +555,73 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
     );
   }
 
+  if (isGridLayout) {
+    const currentGridWidth = gridDimensions?.width ?? width * 0.9;
+    const currentGridHeight = gridDimensions?.height ?? height * 0.75;
+    const dynamicKeyWidth = currentGridWidth / 6;
+    const dynamicKeyHeight = currentGridHeight / rowSizes.length;
+
+    return (
+      <View style={styles.resizableContainer}>
+        <GestureDetector gesture={dragGesture}>
+          <Animated.View style={[styles.resizableGrid, gridAnimatedStyle, { backgroundColor: getButtonColor() }]}>
+            <View style={[styles.keysContainer, styles.gridKeysContainer]}>
+              {layout.map((row, rowIndex) => (
+                <View key={rowIndex} style={[styles.row, styles.gridRow]}>
+                  {row.map((key, keyIndexInRow) => {
+                    const currentIndex = keyIndex++;
+                    const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
+                    return (
+                      <Pressable
+                        key={`${key}-${currentIndex}`}
+                        onPress={() => handleKeyAction(key)}
+                        style={[
+                          styles.gridKey,
+                          {
+                            width: dynamicKeyWidth,
+                            height: dynamicKeyHeight,
+                            backgroundColor: isSpecial ? theme.specialKey : getButtonColor(),
+                            borderColor: "#000000",
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.gridKeyText, { color: getButtonTextColor() }]}>
+                          {key === SPECIAL_KEYS.SPACE ? "SPACE" : key === SPECIAL_KEYS.ENTER ? "ENTER" : key === SPECIAL_KEYS.DELETE ? "DEL" : key}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
+            <GestureDetector gesture={resizeGesture}>
+              <View style={styles.resizeHandle}>
+                <Feather name="maximize-2" size={16} color={theme.tabIconDefault} />
+              </View>
+            </GestureDetector>
+          </Animated.View>
+        </GestureDetector>
+        <KeySizeModal
+          visible={sizeModalVisible}
+          onClose={() => setSizeModalVisible(false)}
+          onSelectSize={(size) => {
+            if (selectedKeyForSize) {
+              setKeySize(keyboardLayout, selectedKeyForSize, size);
+            }
+          }}
+          currentSize={selectedKeyForSize ? getKeySize(keyboardLayout, selectedKeyForSize) : "medium"}
+          keyLabel={selectedKeyForSize || ""}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={[
       styles.container, 
       { height: keyboardHeight }, 
       isFullscreenLayout && styles.gridContainer
     ]}>
-      <View style={styles.topBar}>
-        <View style={styles.leftButtons}>
-          <Pressable
-            onPress={toggleLayout}
-            style={[styles.toggleButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder }]}
-            accessibilityLabel={`Switch keyboard layout, currently ${getLayoutDisplayName()}`}
-          >
-            <Text style={[styles.toggleText, { color: theme.text }]}>
-              {getLayoutDisplayName()}
-            </Text>
-            <Feather name="refresh-cw" size={14} color={theme.text} style={styles.toggleIcon} />
-          </Pressable>
-          <Pressable
-            onPress={toggleCustomize}
-            style={[
-              styles.toggleButton, 
-              { 
-                backgroundColor: isCustomizing ? theme.primary : theme.specialKey, 
-                borderColor: theme.keyBorder 
-              }
-            ]}
-            accessibilityLabel={isCustomizing ? "Done customizing" : "Customize keyboard"}
-          >
-            <Feather name={isCustomizing ? "check" : "edit-2"} size={14} color={isCustomizing ? "#FFFFFF" : theme.text} />
-            <Text style={[styles.toggleText, { color: isCustomizing ? "#FFFFFF" : theme.text, marginLeft: 4 }]}>
-              {isCustomizing ? "Done" : "Edit"}
-            </Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.customizeButtons}>
-          {isCustomizing ? (
-            <Pressable
-              onPress={handleReset}
-              style={[styles.toggleButton, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder, marginRight: Spacing.sm }]}
-              accessibilityLabel="Reset layout"
-            >
-              <Feather name="rotate-ccw" size={14} color={theme.text} />
-              <Text style={[styles.toggleText, { color: theme.text, marginLeft: 4 }]}>Reset</Text>
-            </Pressable>
-          ) : null}
-          {keyboardLayout === "abc" ? (
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onBackspace();
-              }}
-              style={[styles.deleteButtonLarge, { backgroundColor: theme.specialKey, borderColor: theme.keyBorder }]}
-              accessibilityLabel="Delete"
-            >
-              <Feather name="delete" size={22} color={theme.text} />
-              <Text style={[styles.deleteButtonText, { color: theme.text }]}>Delete</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
-
-      {isCustomizing ? (
-        <Text style={[styles.hint, { color: theme.tabIconDefault }]}>
-          Hold and drag to rearrange. Long-press keys to resize.
-        </Text>
-      ) : null}
 
       <View style={[styles.keysContainer, isFullscreenLayout && styles.gridKeysContainer]}>
         {layout.map((row, rowIndex) => (
@@ -641,6 +686,42 @@ const styles = StyleSheet.create({
   gridContainer: {
     paddingHorizontal: Spacing.xs,
     paddingBottom: 0,
+  },
+  resizableContainer: {
+    flex: 1,
+    position: "relative",
+  },
+  resizableGrid: {
+    position: "absolute",
+    borderRadius: BorderRadius.sm,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "rgba(0,0,0,0.2)",
+  },
+  resizeHandle: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+    width: 28,
+    height: 28,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  gridKey: {
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 0.5,
+  },
+  gridKeyText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   topBar: {
     flexDirection: "row",
