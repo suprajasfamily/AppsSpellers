@@ -353,7 +353,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   const isGridLayout = keyboardLayout === "grid";
   const isLetterboardLayout = keyboardLayout === "letterboard";
   const isFullscreenLayout = isGridLayout || isLetterboardLayout;
-  const keyboardHeight = isFullscreenLayout ? height * 0.85 : height * KeyboardSizes[keyboardSize];
+  const keyboardHeight = isLetterboardLayout ? height * 0.99 : (isGridLayout ? height * 0.85 : height * KeyboardSizes[keyboardSize]);
   const maxKeysInRow = Math.max(...rowSizes);
   const spacing = KEY_SPACING_VALUES[keySpacing];
   const getBaseKeyWidth = () => {
@@ -429,12 +429,91 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
 
   let keyIndex = 0;
 
+  if (isLetterboardLayout) {
+    return (
+      <View style={[
+        styles.container, 
+        { height: keyboardHeight, flexDirection: "column" }, 
+        styles.gridContainer,
+        { backgroundColor: getLetterboardBgColor() }
+      ]}>
+        <View style={[styles.keysContainer, styles.gridKeysContainer, { flex: 1 }]}>
+          {layout.map((row, rowIndex) => {
+            return (
+              <View key={rowIndex} style={[
+                styles.row, 
+                { marginVertical: 0 },
+                rowIndex === layout.length - 1 ? styles.gridRowRight : styles.gridRow
+              ]}>
+                {row.map((key, keyIndexInRow) => {
+                  const currentIndex = keyIndex++;
+                  const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
+                  return (
+                    <DraggableKey
+                      key={`${key}-${currentIndex}`}
+                      keyLabel={key}
+                      index={currentIndex}
+                      baseKeyWidth={baseKeyWidth}
+                      isCustomizing={isCustomizing}
+                      onSwap={handleSwap}
+                      onPress={() => handleKeyAction(key)}
+                      onLongPressForSize={() => handleLongPressForSize(key)}
+                      totalKeys={customKeys.length}
+                      getButtonColor={getButtonColor}
+                      getButtonTextColor={getButtonTextColor}
+                      rowSizes={rowSizes}
+                      keySize={getKeySize(keyboardLayout, key)}
+                      isSpecialKey={isSpecial}
+                      keyMargin={spacing}
+                      pushToRight={false}
+                      isLetterboard={true}
+                      letterboardBgColor={getLetterboardBgColor()}
+                      letterboardTextColor={getLetterboardTextColor()}
+                    />
+                  );
+                })}
+              </View>
+            );
+          })}
+        </View>
+        <View style={[styles.letterboardBottomBar, { backgroundColor: getLetterboardBgColor() }]}>
+          <Pressable
+            onPress={toggleLayout}
+            style={styles.letterboardBottomButton}
+            accessibilityLabel={`Switch keyboard layout`}
+          >
+            <Feather name="refresh-cw" size={12} color={getLetterboardTextColor()} />
+          </Pressable>
+          <Pressable
+            onPress={toggleCustomize}
+            style={styles.letterboardBottomButton}
+            accessibilityLabel={isCustomizing ? "Done customizing" : "Customize keyboard"}
+          >
+            <Feather name={isCustomizing ? "check" : "settings"} size={12} color={getLetterboardTextColor()} />
+          </Pressable>
+        </View>
+        <KeySizeModal
+          visible={sizeModalVisible}
+          onClose={() => setSizeModalVisible(false)}
+          currentSize={selectedKeyForSize ? getKeySize(keyboardLayout, selectedKeyForSize) : "medium"}
+          keyLabel={selectedKeyForSize || ""}
+          onSelectSize={(size: KeySize) => {
+            if (selectedKeyForSize) {
+              setKeySize(keyboardLayout, selectedKeyForSize, size);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }
+            setSizeModalVisible(false);
+          }}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={[
       styles.container, 
       { height: keyboardHeight }, 
-      isFullscreenLayout && styles.gridContainer,
-      isLetterboardLayout && { backgroundColor: getLetterboardBgColor() }
+      isFullscreenLayout && styles.gridContainer
     ]}>
       <View style={styles.topBar}>
         <View style={styles.leftButtons}>
@@ -698,5 +777,15 @@ const styles = StyleSheet.create({
   sizeOptionText: {
     fontSize: Typography.body.fontSize,
     fontWeight: "500",
+  },
+  letterboardBottomBar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    height: 20,
+    gap: Spacing.lg,
+  },
+  letterboardBottomButton: {
+    padding: 4,
   },
 });
