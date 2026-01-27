@@ -36,18 +36,18 @@ export const DEFAULT_ABC_KEYS = [
   "K", "L", "M", "N", "O",
   "P", "Q", "R", "S", "T",
   "U", "V", "W", "X", "Y",
-  "Z", ".", SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
+  "Z", SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
 ];
 
 export const DEFAULT_QWERTY_KEYS = [
   "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
   "A", "S", "D", "F", "G", "H", "J", "K", "L",
   "Z", "X", "C", "V", "B", "N", "M",
-  SPECIAL_KEYS.DELETE, ".", SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
+  SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
 ];
 
 export const ABC_ROW_SIZES = [5, 5, 5, 5, 5, 4];
-export const QWERTY_ROW_SIZES = [10, 9, 7, 4];
+export const QWERTY_ROW_SIZES = [10, 9, 7, 3];
 
 export const DEFAULT_GRID_KEYS = [
   "A", "B", "C", "D", "E", SPECIAL_KEYS.DELETE,
@@ -151,11 +151,20 @@ export interface GridDimensions {
   y: number;
 }
 
+export type KeyTextSize = "small" | "medium" | "large";
+
+export const KEY_TEXT_SIZE_VALUES: Record<KeyTextSize, number> = {
+  small: 14,
+  medium: 18,
+  large: 24,
+};
+
 interface Preferences {
   keyboardLayout: KeyboardLayout;
   keyboardSize: SizeOption;
   typingAreaSize: SizeOption;
   keySpacing: KeySpacing;
+  keyTextSize: KeyTextSize;
   displayName: string;
   avatarId: string;
   buttonColorId: string;
@@ -197,6 +206,7 @@ interface PreferencesContextType extends Preferences {
   setGridDimensions: (dimensions: GridDimensions | null) => void;
   setQwertyTextColor: (color: string) => void;
   setTextAreaHeight: (height: number) => void;
+  setKeyTextSize: (size: KeyTextSize) => void;
 }
 
 const defaultPreferences: Preferences = {
@@ -204,6 +214,7 @@ const defaultPreferences: Preferences = {
   keyboardSize: "medium",
   typingAreaSize: "small",
   keySpacing: "normal",
+  keyTextSize: "medium",
   displayName: "Young Writer",
   avatarId: "robot",
   buttonColorId: "soft-blue",
@@ -262,11 +273,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
           customLayouts.grid = DEFAULT_GRID_KEYS;
         }
         if (customLayouts.abc) {
-          const abcWithoutDelete = customLayouts.abc.filter((k: string) => k !== SPECIAL_KEYS.DELETE);
-          if (!abcWithoutDelete.includes(SPECIAL_KEYS.SPACE) || !abcWithoutDelete.includes(SPECIAL_KEYS.ENTER)) {
-            customLayouts.abc = [...abcWithoutDelete.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k)), SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
-          } else {
-            customLayouts.abc = abcWithoutDelete;
+          const hasDelete = customLayouts.abc.includes(SPECIAL_KEYS.DELETE);
+          const hasSpace = customLayouts.abc.includes(SPECIAL_KEYS.SPACE);
+          const hasEnter = customLayouts.abc.includes(SPECIAL_KEYS.ENTER);
+          if (!hasDelete || !hasSpace || !hasEnter) {
+            const letters = customLayouts.abc.filter((k: string) => !Object.values(SPECIAL_KEYS).includes(k) && k !== '.');
+            customLayouts.abc = [...letters, SPECIAL_KEYS.DELETE, SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER];
           }
         }
         if (customLayouts.qwerty && !customLayouts.qwerty.includes(SPECIAL_KEYS.SPACE)) {
@@ -299,6 +311,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const setKeyboardSize = (size: SizeOption) => savePreferences({ keyboardSize: size });
   const setTypingAreaSize = (size: SizeOption) => savePreferences({ typingAreaSize: size });
   const setKeySpacing = (spacing: KeySpacing) => savePreferences({ keySpacing: spacing });
+  const setKeyTextSize = (size: KeyTextSize) => savePreferences({ keyTextSize: size });
   const setDisplayName = (name: string) => savePreferences({ displayName: name });
   const setAvatarId = (id: string) => savePreferences({ avatarId: id });
   const setButtonColorId = (id: string) => savePreferences({ buttonColorId: id });
@@ -416,6 +429,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setKeyboardSize,
         setTypingAreaSize,
         setKeySpacing,
+        setKeyTextSize,
         setDisplayName,
         setAvatarId,
         setButtonColorId,

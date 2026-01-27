@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { useTheme } from "@/hooks/useTheme";
-import { usePreferences } from "@/contexts/PreferencesContext";
+import { usePreferences, KEY_TEXT_SIZE_VALUES } from "@/contexts/PreferencesContext";
 import { BorderRadius, Spacing, Typography, Fonts } from "@/constants/theme";
 
 export interface KeyButtonProps {
@@ -32,10 +32,11 @@ export function KeyButton({
   useCustomColor = true,
 }: KeyButtonProps) {
   const { theme } = useTheme();
-  const { getButtonColor } = usePreferences();
+  const { getButtonColor, keyTextSize } = usePreferences();
   const scale = useSharedValue(1);
 
   const buttonColor = useCustomColor ? getButtonColor() : theme.specialKey;
+  const defaultFontSize = KEY_TEXT_SIZE_VALUES[keyTextSize];
 
   const handlePressIn = () => {
     scale.value = withSpring(0.9, { damping: 15, stiffness: 400 });
@@ -80,7 +81,7 @@ export function KeyButton({
           styles.keyText,
           {
             color: textColor,
-            fontSize: fontSize || Typography.keyboard.fontSize,
+            fontSize: fontSize || defaultFontSize,
             fontFamily: Fonts?.rounded || "System",
           },
         ]}
