@@ -711,18 +711,19 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   suggestionsContainer: {
-    height: 44,
+    height: 36,
     marginBottom: 0,
+    marginTop: 0,
   },
   suggestionsScroll: {
     alignItems: "center",
     paddingHorizontal: Spacing.xs,
   },
   dragHandle: {
-    height: 24,
+    height: 20,
     justifyContent: "center",
     alignItems: "center",
-    marginVertical: 2,
+    marginVertical: 0,
     borderRadius: BorderRadius.xs,
   },
   dragHandleBar: {
