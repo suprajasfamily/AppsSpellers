@@ -168,6 +168,7 @@ interface Preferences {
   metronomeBpm: number;
   gridDimensions: GridDimensions | null;
   qwertyTextColor: string;
+  textAreaHeight: number;
   isLoading: boolean;
 }
 
@@ -195,6 +196,7 @@ interface PreferencesContextType extends Preferences {
   setMetronomeBpm: (bpm: number) => void;
   setGridDimensions: (dimensions: GridDimensions | null) => void;
   setQwertyTextColor: (color: string) => void;
+  setTextAreaHeight: (height: number) => void;
 }
 
 const defaultPreferences: Preferences = {
@@ -231,6 +233,7 @@ const defaultPreferences: Preferences = {
   metronomeBpm: 60,
   gridDimensions: null,
   qwertyTextColor: "#000000",
+  textAreaHeight: 150,
   isLoading: true,
 };
 
@@ -401,6 +404,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     savePreferences({ qwertyTextColor: color });
   };
 
+  const setTextAreaHeight = (height: number) => {
+    savePreferences({ textAreaHeight: Math.max(80, height) });
+  };
+
   return (
     <PreferencesContext.Provider
       value={{
@@ -428,6 +435,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setMetronomeBpm,
         setGridDimensions,
         setQwertyTextColor,
+        setTextAreaHeight,
       }}
     >
       {children}
