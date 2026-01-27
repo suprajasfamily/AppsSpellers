@@ -192,10 +192,11 @@ function DraggableKey({
     zIndex: zIndex.value,
   }));
 
-  const { keyboardLayout, keyTextSize } = usePreferences();
+  const { keyboardLayout, keyTextSize, getKeyTextColor: getKeyTextColorPref } = usePreferences();
   const isGridLayout = keyboardLayout === "grid";
   const isFullscreenLayout = isGridLayout || isLetterboard;
   const textFontSize = KEY_TEXT_SIZE_VALUES[keyTextSize];
+  const keyTextColorValue = getKeyTextColorPref();
   
   const getKeyButtonColor = () => {
     if (isLetterboard && letterboardBgColor) return letterboardBgColor;
@@ -204,15 +205,13 @@ function DraggableKey({
     return getButtonColor();
   };
   
-  const getKeyTextColor = () => {
+  const getKeyTextColorLocal = () => {
     if (isLetterboard && letterboardTextColor) return letterboardTextColor;
-    if (isGridLayout) return getButtonTextColor();
-    if (isSpecialKey) return theme.text;
-    return getButtonTextColor();
+    return keyTextColorValue;
   };
   
   const buttonColor = getKeyButtonColor();
-  const textColor = getKeyTextColor();
+  const textColor = getKeyTextColorLocal();
 
   const getKeyDisplay = () => {
     const iconSize = Math.max(16, textFontSize);
