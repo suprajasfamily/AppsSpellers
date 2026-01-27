@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { View, StyleSheet, useWindowDimensions, Text, ScrollView, Pressable } from "react-native";
+import React, { useState, useMemo, useRef } from "react";
+import { View, StyleSheet, useWindowDimensions, Text, Pressable, FlatList } from "react-native";
 import { KeyButton } from "./KeyButton";
 import { usePreferences } from "@/contexts/PreferencesContext";
 import { useTheme } from "@/hooks/useTheme";
@@ -7,26 +7,30 @@ import { Spacing, KeyboardSizes, BorderRadius } from "@/constants/theme";
 import { generateGraphPoints, GraphPoint } from "@/lib/calculator";
 import * as Haptics from "expo-haptics";
 
-const calculatorButtons = [
-  ["7", "8", "9", "÷"],
-  ["4", "5", "6", "×"],
-  ["1", "2", "3", "-"],
-  ["0", ".", "=", "+"],
+const basicButtons = [
+  ["7", "8", "9"],
+  ["4", "5", "6"],
+  ["1", "2", "3"],
+  ["0", ".", "="],
+  ["+", "-", "×"],
+  ["÷", "(", ")"],
+  ["C", "DEL", "^"],
 ];
 
 const scientificButtons = [
-  ["sin", "cos", "tan", "√"],
-  ["asin", "acos", "atan", "∛"],
-  ["log", "ln", "e", "^"],
-  ["π", "!", "mod", "%"],
-  ["abs", "floor", "ceil", "round"],
+  ["sin", "cos", "tan"],
+  ["asin", "acos", "atan"],
+  ["log", "ln", "e"],
+  ["√", "∛", "π"],
+  ["abs", "!", "%"],
+  ["mod", "x", "y"],
 ];
 
 const advancedButtons = [
-  ["sinh", "cosh", "tanh", "exp"],
+  ["sinh", "cosh", "tanh"],
+  ["exp", "floor", "ceil"],
+  ["round", ",", "ANS"],
 ];
-
-const controlButtons = ["C", "DEL", "(", ")"];
 
 interface CalculatorProps {
   onCharacter: (char: string) => void;
@@ -125,13 +129,15 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate, expr
   const { keyboardSize } = usePreferences();
   const { theme } = useTheme();
   const { width, height } = useWindowDimensions();
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
   const [showGraph, setShowGraph] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
 
   const keyboardHeight = height * KeyboardSizes[keyboardSize];
-  const numColumns = 4;
-  const buttonWidth = (width - Spacing.md * 2 - (numColumns - 1) * Spacing.xs) / numColumns;
-  const buttonHeight = showGraph ? 36 : (keyboardHeight - Spacing.md * 3) / (showAdvanced ? 12 : 10);
+  const numColumns = 3;
+  const gridPadding = Spacing.xs;
+  const buttonWidth = (width - gridPadding * 2) / numColumns;
+  const buttonHeight = showGraph ? 40 : (keyboardHeight - 60) / 7;
 
   const graphPoints = useMemo(() => {
     if (!showGraph || !expression.toLowerCase().includes('x')) {
@@ -141,6 +147,7 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate, expr
   }, [expression, showGraph]);
 
   const handleButtonPress = (btn: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     switch (btn) {
       case "C":
         onClear();
@@ -189,48 +196,89 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate, expr
     }
   };
 
-  const toggleAdvanced = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setShowAdvanced(!showAdvanced);
-  };
-
   const toggleGraph = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowGraph(!showGraph);
   };
 
+  const goToPage = (page: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCurrentPage(page);
+    flatListRef.current?.scrollToIndex({ index: page, animated: true });
+  };
+
+  const pages = [
+    { id: "basic", label: "123", buttons: basicButtons },
+    { id: "scientific", label: "f(x)", buttons: scientificButtons },
+    { id: "advanced", label: "More", buttons: advancedButtons },
+  ];
+
+  const renderPage = ({ item }: { item: typeof pages[0] }) => (
+    <View style={[styles.page, { width }]}>
+      {item.buttons.map((row, rowIndex) => (
+        <View key={rowIndex} style={styles.gridRow}>
+          {row.map((btn) => (
+            <Pressable
+              key={btn}
+              onPress={() => handleButtonPress(btn)}
+              style={[
+                styles.gridButton,
+                { 
+                  width: buttonWidth,
+                  height: buttonHeight,
+                  backgroundColor: btn === "C" || btn === "DEL" ? theme.specialKey : 
+                                   btn === "=" ? theme.primary : theme.backgroundSecondary,
+                  borderColor: "#000000",
+                },
+              ]}
+            >
+              <Text style={[
+                styles.gridButtonText, 
+                { 
+                  color: btn === "=" ? "#FFFFFF" : theme.text,
+                  fontSize: btn.length > 2 ? 12 : 18,
+                }
+              ]}>
+                {btn}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+
   return (
-    <ScrollView 
-      style={[styles.container, { maxHeight: keyboardHeight }]}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.modeButtons}>
-        <Pressable
-          onPress={toggleAdvanced}
-          style={[
-            styles.modeButton,
-            { 
-              backgroundColor: showAdvanced ? theme.primary : theme.backgroundSecondary,
-              borderColor: theme.keyBorder,
-            },
-          ]}
-        >
-          <Text style={[styles.modeButtonText, { color: showAdvanced ? "#FFFFFF" : theme.text }]}>
-            {showAdvanced ? "Basic" : "More"}
-          </Text>
-        </Pressable>
+    <View style={[styles.container, { height: keyboardHeight }]}>
+      <View style={styles.tabBar}>
+        {pages.map((page, index) => (
+          <Pressable
+            key={page.id}
+            onPress={() => goToPage(index)}
+            style={[
+              styles.tab,
+              { 
+                backgroundColor: currentPage === index ? theme.primary : theme.backgroundSecondary,
+                borderColor: theme.keyBorder,
+              },
+            ]}
+          >
+            <Text style={[styles.tabText, { color: currentPage === index ? "#FFFFFF" : theme.text }]}>
+              {page.label}
+            </Text>
+          </Pressable>
+        ))}
         <Pressable
           onPress={toggleGraph}
           style={[
-            styles.modeButton,
+            styles.tab,
             { 
               backgroundColor: showGraph ? theme.primary : theme.backgroundSecondary,
               borderColor: theme.keyBorder,
             },
           ]}
         >
-          <Text style={[styles.modeButtonText, { color: showGraph ? "#FFFFFF" : theme.text }]}>
+          <Text style={[styles.tabText, { color: showGraph ? "#FFFFFF" : theme.text }]}>
             Graph
           </Text>
         </Pressable>
@@ -240,163 +288,98 @@ export function Calculator({ onCharacter, onBackspace, onClear, onEvaluate, expr
         <SimpleGraph 
           points={graphPoints} 
           width={width - Spacing.md * 2} 
-          height={150} 
+          height={120} 
         />
       ) : null}
 
-      <View style={styles.controlRow}>
-        {controlButtons.map((btn) => (
-          <KeyButton
-            key={btn}
-            label={btn}
-            onPress={() => handleButtonPress(btn)}
-            width={(width - Spacing.md * 2 - 3 * Spacing.xs) / 4}
-            height={buttonHeight}
-            isSpecial={btn === "C" || btn === "DEL"}
+      <FlatList
+        ref={flatListRef}
+        data={pages}
+        renderItem={renderPage}
+        keyExtractor={(item) => item.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={(e) => {
+          const page = Math.round(e.nativeEvent.contentOffset.x / width);
+          setCurrentPage(page);
+        }}
+        getItemLayout={(_, index) => ({
+          length: width,
+          offset: width * index,
+          index,
+        })}
+        style={styles.pagerContainer}
+      />
+
+      <View style={styles.pageIndicator}>
+        {pages.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.dot,
+              { backgroundColor: currentPage === index ? theme.primary : theme.tabIconDefault },
+            ]}
           />
         ))}
       </View>
-
-      <View style={styles.scientificSection}>
-        {scientificButtons.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.row}>
-            {row.map((btn) => (
-              <KeyButton
-                key={btn}
-                label={btn}
-                onPress={() => handleButtonPress(btn)}
-                width={buttonWidth}
-                height={buttonHeight}
-                fontSize={12}
-              />
-            ))}
-          </View>
-        ))}
-      </View>
-
-      {showAdvanced ? (
-        <View style={styles.advancedSection}>
-          {advancedButtons.map((row, rowIndex) => (
-            <View key={rowIndex} style={styles.row}>
-              {row.map((btn) => (
-                <KeyButton
-                  key={btn}
-                  label={btn}
-                  onPress={() => handleButtonPress(btn)}
-                  width={buttonWidth}
-                  height={buttonHeight}
-                  fontSize={12}
-                />
-              ))}
-            </View>
-          ))}
-        </View>
-      ) : null}
-
-      <View style={styles.mainSection}>
-        {calculatorButtons.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.row}>
-            {row.map((btn) => (
-              <KeyButton
-                key={btn}
-                label={btn}
-                onPress={() => handleButtonPress(btn)}
-                width={buttonWidth}
-                height={buttonHeight}
-                isSpecial={btn === "="}
-              />
-            ))}
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.variableRow}>
-        <KeyButton
-          label="x"
-          onPress={() => onCharacter("x")}
-          width={buttonWidth}
-          height={buttonHeight}
-          fontSize={16}
-        />
-        <KeyButton
-          label="y"
-          onPress={() => onCharacter("y")}
-          width={buttonWidth}
-          height={buttonHeight}
-          fontSize={16}
-        />
-        <KeyButton
-          label=","
-          onPress={() => onCharacter(",")}
-          width={buttonWidth}
-          height={buttonHeight}
-          fontSize={16}
-        />
-        <KeyButton
-          label="ANS"
-          onPress={() => onCharacter("ANS")}
-          width={buttonWidth}
-          height={buttonHeight}
-          fontSize={12}
-        />
-      </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    flex: 1,
   },
-  contentContainer: {
-    paddingBottom: Spacing.md,
-  },
-  modeButtons: {
+  tabBar: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
-  modeButton: {
+  tab: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.sm,
     borderWidth: 1,
   },
-  modeButtonText: {
+  tabText: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "600",
   },
-  controlRow: {
+  pagerContainer: {
+    flex: 1,
+  },
+  page: {
+    paddingHorizontal: Spacing.xs,
+  },
+  gridRow: {
+    flexDirection: "row",
+  },
+  gridButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 0.5,
+  },
+  gridButtonText: {
+    fontWeight: "600",
+  },
+  pageIndicator: {
     flexDirection: "row",
     justifyContent: "center",
     gap: Spacing.xs,
-    marginBottom: Spacing.xs,
+    paddingVertical: Spacing.xs,
   },
-  scientificSection: {
-    marginBottom: Spacing.xs,
-  },
-  advancedSection: {
-    marginBottom: Spacing.xs,
-  },
-  mainSection: {
-    marginBottom: Spacing.xs,
-  },
-  variableRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: Spacing.xs,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: Spacing.xs,
-    marginBottom: Spacing.xs,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   graphContainer: {
     borderRadius: BorderRadius.md,
-    marginBottom: Spacing.sm,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.xs,
     position: "relative",
     overflow: "hidden",
   },
