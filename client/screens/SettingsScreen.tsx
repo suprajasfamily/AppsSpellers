@@ -159,6 +159,8 @@ export default function SettingsScreen() {
     setMetronomeVolume,
     setMetronomeBpm,
     resetCustomLayout,
+    qwertyTextColor,
+    setQwertyTextColor,
   } = usePreferences();
 
   const [isTesting, setIsTesting] = useState(false);
@@ -388,10 +390,41 @@ export default function SettingsScreen() {
             </View>
 
             <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              QWERTY Text Color
+            </Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault }]}>
+              Letter color when using the iPad native keyboard
+            </Text>
+            <View style={styles.colorGrid}>
+              {LETTERBOARD_TEXT_COLORS.map((color) => (
+                <Pressable
+                  key={color.id}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setQwertyTextColor(color.value);
+                  }}
+                  style={[
+                    styles.colorButton,
+                    { backgroundColor: color.value },
+                    qwertyTextColor === color.value && {
+                      borderColor: color.value === "#FFFFFF" ? "#000" : theme.text,
+                      borderWidth: 3,
+                    },
+                  ]}
+                  accessibilityLabel={`Select ${color.label} QWERTY text color`}
+                >
+                  {qwertyTextColor === color.value ? (
+                    <Feather name="check" size={20} color={color.value === "#FFFFFF" ? "#000" : "#FFF"} />
+                  ) : null}
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
               Custom Key Arrangement
             </Text>
             <Text style={[styles.helpText, { color: theme.tabIconDefault }]}>
-              Tap the Edit button on the keyboard to rearrange keys
+              Long-press keys on other keyboards to rearrange
             </Text>
             <View style={styles.resetButtonsRow}>
               <Pressable
