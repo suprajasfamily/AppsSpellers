@@ -17,6 +17,7 @@ import {
   ABC_ROW_SIZES, 
   QWERTY_ROW_SIZES,
   GRID_ROW_SIZES,
+  LETTERBOARD_ROW_SIZES,
   KeySize,
   KEY_SPACING_VALUES,
 } from "@/contexts/PreferencesContext";
@@ -84,6 +85,9 @@ interface DraggableKeyProps {
   isSpecialKey: boolean;
   keyMargin: { horizontal: number; vertical: number };
   pushToRight?: boolean;
+  isLetterboard?: boolean;
+  letterboardBgColor?: string;
+  letterboardTextColor?: string;
 }
 
 function DraggableKey({
@@ -102,6 +106,9 @@ function DraggableKey({
   isSpecialKey,
   keyMargin,
   pushToRight = false,
+  isLetterboard = false,
+  letterboardBgColor,
+  letterboardTextColor,
 }: DraggableKeyProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -185,8 +192,24 @@ function DraggableKey({
 
   const { keyboardLayout } = usePreferences();
   const isGridLayout = keyboardLayout === "grid";
-  const buttonColor = isGridLayout ? getButtonColor() : (isSpecialKey ? theme.specialKey : getButtonColor());
-  const textColor = isGridLayout ? getButtonTextColor() : (isSpecialKey ? theme.text : getButtonTextColor());
+  const isFullscreenLayout = isGridLayout || isLetterboard;
+  
+  const getKeyButtonColor = () => {
+    if (isLetterboard && letterboardBgColor) return letterboardBgColor;
+    if (isGridLayout) return getButtonColor();
+    if (isSpecialKey) return theme.specialKey;
+    return getButtonColor();
+  };
+  
+  const getKeyTextColor = () => {
+    if (isLetterboard && letterboardTextColor) return letterboardTextColor;
+    if (isGridLayout) return getButtonTextColor();
+    if (isSpecialKey) return theme.text;
+    return getButtonTextColor();
+  };
+  
+  const buttonColor = getKeyButtonColor();
+  const textColor = getKeyTextColor();
 
   const getKeyDisplay = () => {
     switch (keyLabel) {
@@ -217,14 +240,14 @@ function DraggableKey({
           animatedStyle,
           {
             backgroundColor: buttonColor,
-            borderColor: isGridLayout ? "#000000" : theme.keyBorder,
-            width: keyLabel === SPECIAL_KEYS.SPACE ? (isGridLayout ? keyWidth * 4 : keyWidth * 2.5) : keyWidth,
-            minHeight: isGridLayout ? 60 * sizeMultiplier : 44 * sizeMultiplier,
-            marginHorizontal: isGridLayout ? 0 : keyMargin.horizontal,
-            marginVertical: isGridLayout ? 0 : keyMargin.vertical,
+            borderColor: isFullscreenLayout ? "#000000" : theme.keyBorder,
+            width: keyLabel === SPECIAL_KEYS.SPACE ? (isFullscreenLayout ? keyWidth * 4 : keyWidth * 2.5) : keyWidth,
+            minHeight: isFullscreenLayout ? 60 * sizeMultiplier : 44 * sizeMultiplier,
+            marginHorizontal: isFullscreenLayout ? 0 : keyMargin.horizontal,
+            marginVertical: isFullscreenLayout ? 0 : keyMargin.vertical,
             marginLeft: pushToRight ? "auto" : undefined,
-            borderRadius: isGridLayout ? 0 : BorderRadius.xs,
-            borderWidth: isGridLayout ? 0.5 : 1,
+            borderRadius: isFullscreenLayout ? 0 : BorderRadius.xs,
+            borderWidth: isFullscreenLayout ? 0.5 : 1,
           },
           isCustomizing && styles.customizingKey,
           isDragging && styles.draggingKey,
@@ -302,6 +325,8 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
     setKeyboardLayout, 
     getButtonColor,
     getButtonTextColor,
+    getLetterboardBgColor,
+    getLetterboardTextColor,
     getCustomLayout, 
     setCustomLayout, 
     resetCustomLayout,
@@ -314,11 +339,21 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   const [selectedKeyForSize, setSelectedKeyForSize] = useState<string | null>(null);
 
   const customKeys = useMemo(() => getCustomLayout(keyboardLayout), [keyboardLayout, getCustomLayout]);
-  const rowSizes = keyboardLayout === "abc" ? ABC_ROW_SIZES : keyboardLayout === "qwerty" ? QWERTY_ROW_SIZES : GRID_ROW_SIZES;
+  const getRowSizes = () => {
+    switch (keyboardLayout) {
+      case "abc": return ABC_ROW_SIZES;
+      case "qwerty": return QWERTY_ROW_SIZES;
+      case "grid": return GRID_ROW_SIZES;
+      case "letterboard": return LETTERBOARD_ROW_SIZES;
+    }
+  };
+  const rowSizes = getRowSizes();
   const layout = useMemo(() => chunkArray(customKeys, rowSizes), [customKeys, rowSizes]);
 
   const isGridLayout = keyboardLayout === "grid";
-  const keyboardHeight = isGridLayout ? height * 0.75 : height * KeyboardSizes[keyboardSize];
+  const isLetterboardLayout = keyboardLayout === "letterboard";
+  const isFullscreenLayout = isGridLayout || isLetterboardLayout;
+  const keyboardHeight = isFullscreenLayout ? height * 0.85 : height * KeyboardSizes[keyboardSize];
   const maxKeysInRow = Math.max(...rowSizes);
   const spacing = KEY_SPACING_VALUES[keySpacing];
   const getBaseKeyWidth = () => {
@@ -326,6 +361,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
       case "abc":
         return (width - Spacing.lg * 2 - 5 * (spacing.horizontal * 2)) / 5;
       case "grid":
+      case "letterboard":
         return (width - Spacing.sm * 2) / 6;
       default:
         return (width - Spacing.lg * 2 - maxKeysInRow * (spacing.horizontal * 2)) / maxKeysInRow;
@@ -335,7 +371,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
 
   const toggleLayout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const layouts: KeyboardLayout[] = ["abc", "qwerty", "grid"];
+    const layouts: KeyboardLayout[] = ["abc", "qwerty", "grid", "letterboard"];
     const currentIndex = layouts.indexOf(keyboardLayout);
     const nextIndex = (currentIndex + 1) % layouts.length;
     setKeyboardLayout(layouts[nextIndex]);
@@ -346,6 +382,7 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
       case "abc": return "ABC";
       case "qwerty": return "QWERTY";
       case "grid": return "Grid";
+      case "letterboard": return "Letterboard";
     }
   };
 
@@ -393,7 +430,12 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   let keyIndex = 0;
 
   return (
-    <View style={[styles.container, { height: keyboardHeight }, isGridLayout && styles.gridContainer]}>
+    <View style={[
+      styles.container, 
+      { height: keyboardHeight }, 
+      isFullscreenLayout && styles.gridContainer,
+      isLetterboardLayout && { backgroundColor: getLetterboardBgColor() }
+    ]}>
       <View style={styles.topBar}>
         <View style={styles.leftButtons}>
           <Pressable
@@ -457,12 +499,12 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
         </Text>
       ) : null}
 
-      <View style={[styles.keysContainer, isGridLayout && styles.gridKeysContainer]}>
+      <View style={[styles.keysContainer, isFullscreenLayout && styles.gridKeysContainer]}>
         {layout.map((row, rowIndex) => (
           <View key={rowIndex} style={[
             styles.row, 
-            { marginVertical: isGridLayout ? 0 : spacing.vertical / 2 },
-            isGridLayout ? (rowIndex === layout.length - 1 ? styles.gridRowRight : styles.gridRow) : null
+            { marginVertical: isFullscreenLayout ? 0 : spacing.vertical / 2 },
+            isFullscreenLayout ? (rowIndex === layout.length - 1 ? styles.gridRowRight : styles.gridRow) : null
           ]}>
             {row.map((key, keyIndexInRow) => {
               const currentIndex = keyIndex++;
@@ -487,6 +529,9 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
                   isSpecialKey={isSpecial}
                   keyMargin={spacing}
                   pushToRight={shouldPushToRight}
+                  isLetterboard={isLetterboardLayout}
+                  letterboardBgColor={getLetterboardBgColor()}
+                  letterboardTextColor={getLetterboardTextColor()}
                 />
               );
             })}
