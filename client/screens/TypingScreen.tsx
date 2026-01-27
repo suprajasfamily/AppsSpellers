@@ -17,6 +17,8 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Speech from "expo-speech";
 import { useAudioPlayer } from "expo-audio";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from "react-native-reanimated";
 import { ThemedView } from "@/components/ThemedView";
 import { CustomKeyboard } from "@/components/CustomKeyboard";
 import { Calculator } from "@/components/Calculator";
@@ -26,17 +28,20 @@ import { usePreferences, AppMode, KeyboardLayout } from "@/contexts/PreferencesC
 import { getSuggestions } from "@/lib/wordSuggestions";
 import { evaluateExpression } from "@/lib/calculator";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
-import { Spacing, BorderRadius, Typography, TypingAreaSizes, Fonts } from "@/constants/theme";
+import { Spacing, BorderRadius, Typography, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Typing">;
 
+const MIN_TEXT_HEIGHT = 80;
+const MAX_TEXT_HEIGHT_RATIO = 0.6;
+
 export default function TypingScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { typingAreaSize, voiceSettings, metronomeVolume, metronomeBpm, keyboardLayout, qwertyTextColor } = usePreferences();
+  const { voiceSettings, metronomeVolume, metronomeBpm, keyboardLayout, qwertyTextColor, textAreaHeight, setTextAreaHeight } = usePreferences();
   const navigation = useNavigation<NavigationProp>();
-  const { height } = useWindowDimensions();
+  const { height: screenHeight } = useWindowDimensions();
 
   const [mode, setMode] = useState<AppMode>("keyboard");
   const [text, setText] = useState("");
@@ -50,6 +55,37 @@ export default function TypingScreen() {
 
   const tickPlayer = useAudioPlayer(require("@/assets/audio/tick.wav"));
   const tokPlayer = useAudioPlayer(require("@/assets/audio/tok.wav"));
+
+  const maxTextHeight = screenHeight * MAX_TEXT_HEIGHT_RATIO;
+  const currentHeight = useSharedValue(textAreaHeight || 150);
+  const startHeight = useSharedValue(textAreaHeight || 150);
+
+  const saveHeight = useCallback((h: number) => {
+    setTextAreaHeight(h);
+  }, [setTextAreaHeight]);
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      startHeight.value = currentHeight.value;
+    })
+    .onUpdate((event) => {
+      const newHeight = startHeight.value + event.translationY;
+      currentHeight.value = Math.max(MIN_TEXT_HEIGHT, Math.min(maxTextHeight, newHeight));
+    })
+    .onEnd(() => {
+      runOnJS(saveHeight)(currentHeight.value);
+      runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+    });
+
+  const animatedTextStyle = useAnimatedStyle(() => ({
+    height: currentHeight.value,
+  }));
+
+  useEffect(() => {
+    if (textAreaHeight && textAreaHeight !== currentHeight.value) {
+      currentHeight.value = textAreaHeight;
+    }
+  }, [textAreaHeight]);
 
   useEffect(() => {
     return () => {
@@ -72,8 +108,6 @@ export default function TypingScreen() {
     };
     checkDriveConnection();
   }, []);
-
-  const typingHeight = height * TypingAreaSizes[typingAreaSize];
 
   const updateSuggestions = useCallback((newText: string) => {
     const newSuggestions = getSuggestions(newText);
@@ -524,11 +558,11 @@ export default function TypingScreen() {
             />
           </View>
         ) : (
-          <View
+          <Animated.View
             style={[
               styles.typingArea,
+              animatedTextStyle,
               {
-                height: typingHeight,
                 backgroundColor: theme.typingAreaBg,
                 borderColor: theme.typingAreaBorder,
               },
@@ -551,11 +585,17 @@ export default function TypingScreen() {
                 {text || "Start typing..."}
               </Text>
             </ScrollView>
-          </View>
+          </Animated.View>
         )}
 
         {mode === "keyboard" && keyboardLayout !== "qwerty" && keyboardLayout !== "letterboard" ? (
           <>
+            <GestureDetector gesture={panGesture}>
+              <View style={[styles.dragHandle, { backgroundColor: theme.backgroundSecondary }]}>
+                <View style={[styles.dragHandleBar, { backgroundColor: theme.tabIconDefault }]} />
+              </View>
+            </GestureDetector>
+
             <View style={styles.suggestionsContainer}>
               <ScrollView
                 horizontal
@@ -580,13 +620,20 @@ export default function TypingScreen() {
             />
           </>
         ) : mode === "calculator" ? (
-          <Calculator
+          <>
+            <GestureDetector gesture={panGesture}>
+              <View style={[styles.dragHandle, { backgroundColor: theme.backgroundSecondary }]}>
+                <View style={[styles.dragHandleBar, { backgroundColor: theme.tabIconDefault }]} />
+              </View>
+            </GestureDetector>
+            <Calculator
               onCharacter={handleCalculatorCharacter}
               onBackspace={handleBackspace}
               onClear={handleCalculatorClear}
               onEvaluate={handleCalculatorEvaluate}
               expression={text}
             />
+          </>
         ) : null}
       </View>
     </ThemedView>
@@ -664,11 +711,23 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   suggestionsContainer: {
-    height: 50,
+    height: 44,
     marginBottom: 0,
   },
   suggestionsScroll: {
     alignItems: "center",
     paddingHorizontal: Spacing.xs,
+  },
+  dragHandle: {
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 2,
+    borderRadius: BorderRadius.xs,
+  },
+  dragHandleBar: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
   },
 });
