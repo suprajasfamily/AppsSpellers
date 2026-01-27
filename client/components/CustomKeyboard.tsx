@@ -242,13 +242,11 @@ function DraggableKey({
           {
             backgroundColor: buttonColor,
             borderColor: isFullscreenLayout ? "#000000" : theme.keyBorder,
-            width: keyLabel === SPECIAL_KEYS.SPACE ? (isFullscreenLayout ? keyWidth * 4 : keyWidth * 2.5) : keyWidth,
-            minHeight: isFullscreenLayout ? 60 * sizeMultiplier : 44 * sizeMultiplier,
-            marginHorizontal: isFullscreenLayout ? 0 : keyMargin.horizontal,
-            marginVertical: isFullscreenLayout ? 0 : keyMargin.vertical,
+            marginHorizontal: 0,
+            marginVertical: 0,
             marginLeft: pushToRight ? "auto" : undefined,
-            borderRadius: isFullscreenLayout ? 0 : BorderRadius.xs,
-            borderWidth: isFullscreenLayout ? 0.5 : 1,
+            borderRadius: 0,
+            borderWidth: 0.5,
           },
           isCustomizing && styles.customizingKey,
           isDragging && styles.draggingKey,
@@ -617,19 +615,10 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   }
 
   return (
-    <View style={[
-      styles.container, 
-      { height: keyboardHeight }, 
-      isFullscreenLayout && styles.gridContainer
-    ]}>
-
-      <View style={[styles.keysContainer, isFullscreenLayout && styles.gridKeysContainer]}>
+    <View style={[styles.container, styles.gridContainer]}>
+      <View style={[styles.keysContainer]}>
         {layout.map((row, rowIndex) => (
-          <View key={rowIndex} style={[
-            styles.row, 
-            { marginVertical: isFullscreenLayout ? 0 : spacing.vertical / 2 },
-            isFullscreenLayout ? (rowIndex === layout.length - 1 ? styles.gridRowRight : styles.gridRow) : null
-          ]}>
+          <View key={rowIndex} style={[styles.row]}>
             {row.map((key, keyIndexInRow) => {
               const currentIndex = keyIndex++;
               const isSpecial = Object.values(SPECIAL_KEYS).includes(key);
@@ -680,11 +669,13 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.sm,
-    paddingBottom: Spacing.sm,
+    flex: 1,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+    paddingTop: 0,
   },
   gridContainer: {
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: 0,
     paddingBottom: 0,
   },
   resizableContainer: {
@@ -776,7 +767,7 @@ const styles = StyleSheet.create({
   },
   keysContainer: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "space-evenly",
     zIndex: 1,
   },
   gridKeysContainer: {
@@ -786,7 +777,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "stretch",
+    flex: 1,
   },
   gridRow: {
     justifyContent: "flex-start",
@@ -798,9 +790,9 @@ const styles = StyleSheet.create({
   },
   draggableKey: {
     minWidth: 32,
-    minHeight: 44,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.md,
+    flex: 1,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.xs,
     borderWidth: 1,
     justifyContent: "center",
