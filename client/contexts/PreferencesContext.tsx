@@ -94,6 +94,17 @@ export const LETTERBOARD_TEXT_COLORS = [
   { id: "maroon", label: "Maroon", value: "#880E4F" },
 ];
 
+export const KEY_TEXT_COLORS = [
+  { id: "black", label: "Black", value: "#000000" },
+  { id: "white", label: "White", value: "#FFFFFF" },
+  { id: "dark-gray", label: "Dark Gray", value: "#424242" },
+  { id: "navy", label: "Navy Blue", value: "#1A237E" },
+  { id: "red", label: "Red", value: "#C62828" },
+  { id: "green", label: "Green", value: "#2E7D32" },
+  { id: "purple", label: "Purple", value: "#6A1B9A" },
+  { id: "orange", label: "Orange", value: "#E65100" },
+];
+
 function isGridLayoutOutdated(storedKeys: string[]): boolean {
   const requiredKeys = [SPECIAL_KEYS.DELETE, SPECIAL_KEYS.ENTER, SPECIAL_KEYS.SPACE, ",", "!", "?", "."];
   const invalidKeys = ["'", ":", "#"];
@@ -151,12 +162,13 @@ export interface GridDimensions {
   y: number;
 }
 
-export type KeyTextSize = "small" | "medium" | "large";
+export type KeyTextSize = "small" | "medium" | "large" | "extra-large";
 
 export const KEY_TEXT_SIZE_VALUES: Record<KeyTextSize, number> = {
-  small: 14,
-  medium: 18,
-  large: 24,
+  small: 16,
+  medium: 24,
+  large: 36,
+  "extra-large": 48,
 };
 
 interface Preferences {
@@ -165,6 +177,7 @@ interface Preferences {
   typingAreaSize: SizeOption;
   keySpacing: KeySpacing;
   keyTextSize: KeyTextSize;
+  keyTextColorId: string;
   displayName: string;
   avatarId: string;
   buttonColorId: string;
@@ -207,6 +220,8 @@ interface PreferencesContextType extends Preferences {
   setQwertyTextColor: (color: string) => void;
   setTextAreaHeight: (height: number) => void;
   setKeyTextSize: (size: KeyTextSize) => void;
+  setKeyTextColorId: (id: string) => void;
+  getKeyTextColor: () => string;
 }
 
 const defaultPreferences: Preferences = {
@@ -215,6 +230,7 @@ const defaultPreferences: Preferences = {
   typingAreaSize: "small",
   keySpacing: "normal",
   keyTextSize: "medium",
+  keyTextColorId: "black",
   displayName: "Young Writer",
   avatarId: "robot",
   buttonColorId: "soft-blue",
@@ -312,6 +328,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const setTypingAreaSize = (size: SizeOption) => savePreferences({ typingAreaSize: size });
   const setKeySpacing = (spacing: KeySpacing) => savePreferences({ keySpacing: spacing });
   const setKeyTextSize = (size: KeyTextSize) => savePreferences({ keyTextSize: size });
+  const setKeyTextColorId = (id: string) => savePreferences({ keyTextColorId: id });
   const setDisplayName = (name: string) => savePreferences({ displayName: name });
   const setAvatarId = (id: string) => savePreferences({ avatarId: id });
   const setButtonColorId = (id: string) => savePreferences({ buttonColorId: id });
@@ -336,6 +353,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const getLetterboardTextColor = () => {
     const color = LETTERBOARD_TEXT_COLORS.find(c => c.id === preferences.letterboardTextColorId);
     return color ? color.value : LETTERBOARD_TEXT_COLORS[0].value;
+  };
+
+  const getKeyTextColor = () => {
+    const color = KEY_TEXT_COLORS.find(c => c.id === preferences.keyTextColorId);
+    return color ? color.value : KEY_TEXT_COLORS[0].value;
   };
 
   const setCustomLayout = (layout: KeyboardLayout, keys: string[]) => {
@@ -430,6 +452,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setTypingAreaSize,
         setKeySpacing,
         setKeyTextSize,
+        setKeyTextColorId,
+        getKeyTextColor,
         setDisplayName,
         setAvatarId,
         setButtonColorId,
