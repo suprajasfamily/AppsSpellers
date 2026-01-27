@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export type KeyboardLayout = "abc" | "qwerty" | "grid";
+export type KeyboardLayout = "abc" | "qwerty" | "grid" | "letterboard";
 export type SizeOption = "small" | "medium" | "large";
 export type AppMode = "keyboard" | "calculator";
 export type KeySize = "small" | "medium" | "large";
@@ -60,6 +60,40 @@ export const DEFAULT_GRID_KEYS = [
 
 export const GRID_ROW_SIZES = [6, 6, 6, 6, 6, 3];
 
+export const DEFAULT_LETTERBOARD_KEYS = [
+  "A", "B", "C", "D", "E", SPECIAL_KEYS.DELETE,
+  "F", "G", "H", "I", "J", ",",
+  "K", "L", "M", "N", "O", "!",
+  "P", "Q", "R", "S", "T", "?",
+  "U", "V", "W", "X", "Y", ".",
+  "Z", SPECIAL_KEYS.SPACE, SPECIAL_KEYS.ENTER,
+];
+
+export const LETTERBOARD_ROW_SIZES = [6, 6, 6, 6, 6, 3];
+
+export const LETTERBOARD_COLORS = [
+  { id: "classic-white", label: "Classic White", value: "#FFFFFF" },
+  { id: "soft-cream", label: "Soft Cream", value: "#FFF8E7" },
+  { id: "light-gray", label: "Light Gray", value: "#E8E8E8" },
+  { id: "mint-green", label: "Mint Green", value: "#E8F5E9" },
+  { id: "sky-blue", label: "Sky Blue", value: "#E3F2FD" },
+  { id: "lavender", label: "Lavender", value: "#F3E5F5" },
+  { id: "peach", label: "Peach", value: "#FBE9E7" },
+  { id: "charcoal", label: "Charcoal", value: "#424242" },
+  { id: "navy", label: "Navy", value: "#1A237E" },
+  { id: "forest", label: "Forest", value: "#1B5E20" },
+];
+
+export const LETTERBOARD_TEXT_COLORS = [
+  { id: "black", label: "Black", value: "#000000" },
+  { id: "dark-gray", label: "Dark Gray", value: "#424242" },
+  { id: "white", label: "White", value: "#FFFFFF" },
+  { id: "navy", label: "Navy", value: "#1A237E" },
+  { id: "brown", label: "Brown", value: "#5D4037" },
+  { id: "dark-green", label: "Dark Green", value: "#1B5E20" },
+  { id: "maroon", label: "Maroon", value: "#880E4F" },
+];
+
 function isGridLayoutOutdated(storedKeys: string[]): boolean {
   const requiredKeys = [SPECIAL_KEYS.DELETE, SPECIAL_KEYS.ENTER, SPECIAL_KEYS.SPACE, ",", "!", "?", "."];
   const invalidKeys = ["'", ":", "#"];
@@ -91,12 +125,14 @@ interface CustomLayouts {
   abc: string[];
   qwerty: string[];
   grid: string[];
+  letterboard: string[];
 }
 
 interface KeySizes {
   abc: KeySizeMap;
   qwerty: KeySizeMap;
   grid: KeySizeMap;
+  letterboard: KeySizeMap;
 }
 
 export interface VoiceSettings {
@@ -116,6 +152,8 @@ interface Preferences {
   displayName: string;
   avatarId: string;
   buttonColorId: string;
+  letterboardBgColorId: string;
+  letterboardTextColorId: string;
   customLayouts: CustomLayouts;
   keySizes: KeySizes;
   voiceSettings: VoiceSettings;
@@ -132,8 +170,12 @@ interface PreferencesContextType extends Preferences {
   setDisplayName: (name: string) => void;
   setAvatarId: (id: string) => void;
   setButtonColorId: (id: string) => void;
+  setLetterboardBgColorId: (id: string) => void;
+  setLetterboardTextColorId: (id: string) => void;
   getButtonColor: () => string;
   getButtonTextColor: () => string;
+  getLetterboardBgColor: () => string;
+  getLetterboardTextColor: () => string;
   setCustomLayout: (layout: KeyboardLayout, keys: string[]) => void;
   resetCustomLayout: (layout: KeyboardLayout) => void;
   getCustomLayout: (layout: KeyboardLayout) => string[];
@@ -152,15 +194,19 @@ const defaultPreferences: Preferences = {
   displayName: "Young Writer",
   avatarId: "robot",
   buttonColorId: "soft-blue",
+  letterboardBgColorId: "classic-white",
+  letterboardTextColorId: "black",
   customLayouts: {
     abc: DEFAULT_ABC_KEYS,
     qwerty: DEFAULT_QWERTY_KEYS,
     grid: DEFAULT_GRID_KEYS,
+    letterboard: DEFAULT_LETTERBOARD_KEYS,
   },
   keySizes: {
     abc: {},
     qwerty: {},
     grid: {},
+    letterboard: {},
   },
   voiceSettings: {
     rate: 1.0,
@@ -240,6 +286,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const setDisplayName = (name: string) => savePreferences({ displayName: name });
   const setAvatarId = (id: string) => savePreferences({ avatarId: id });
   const setButtonColorId = (id: string) => savePreferences({ buttonColorId: id });
+  const setLetterboardBgColorId = (id: string) => savePreferences({ letterboardBgColorId: id });
+  const setLetterboardTextColorId = (id: string) => savePreferences({ letterboardTextColorId: id });
   
   const getButtonColor = () => {
     const color = BUTTON_COLORS.find(c => c.id === preferences.buttonColorId);
@@ -251,6 +299,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     return color ? color.textColor : BUTTON_COLORS[0].textColor;
   };
 
+  const getLetterboardBgColor = () => {
+    const color = LETTERBOARD_COLORS.find(c => c.id === preferences.letterboardBgColorId);
+    return color ? color.value : LETTERBOARD_COLORS[0].value;
+  };
+
+  const getLetterboardTextColor = () => {
+    const color = LETTERBOARD_TEXT_COLORS.find(c => c.id === preferences.letterboardTextColorId);
+    return color ? color.value : LETTERBOARD_TEXT_COLORS[0].value;
+  };
+
   const setCustomLayout = (layout: KeyboardLayout, keys: string[]) => {
     const newCustomLayouts = {
       ...preferences.customLayouts,
@@ -260,10 +318,17 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   };
 
   const resetCustomLayout = (layout: KeyboardLayout) => {
-    const defaultLayout = layout === "abc" ? DEFAULT_ABC_KEYS : DEFAULT_QWERTY_KEYS;
+    const getDefaultLayout = () => {
+      switch (layout) {
+        case "abc": return DEFAULT_ABC_KEYS;
+        case "qwerty": return DEFAULT_QWERTY_KEYS;
+        case "grid": return DEFAULT_GRID_KEYS;
+        case "letterboard": return DEFAULT_LETTERBOARD_KEYS;
+      }
+    };
     const newCustomLayouts = {
       ...preferences.customLayouts,
-      [layout]: defaultLayout,
+      [layout]: getDefaultLayout(),
     };
     const newKeySizes = {
       ...preferences.keySizes,
@@ -273,7 +338,15 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   };
 
   const getCustomLayout = (layout: KeyboardLayout): string[] => {
-    return preferences.customLayouts[layout] || (layout === "abc" ? DEFAULT_ABC_KEYS : DEFAULT_QWERTY_KEYS);
+    const getDefaultLayout = () => {
+      switch (layout) {
+        case "abc": return DEFAULT_ABC_KEYS;
+        case "qwerty": return DEFAULT_QWERTY_KEYS;
+        case "grid": return DEFAULT_GRID_KEYS;
+        case "letterboard": return DEFAULT_LETTERBOARD_KEYS;
+      }
+    };
+    return preferences.customLayouts[layout] || getDefaultLayout();
   };
 
   const setKeySize = (layout: KeyboardLayout, key: string, size: KeySize) => {
@@ -318,8 +391,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setDisplayName,
         setAvatarId,
         setButtonColorId,
+        setLetterboardBgColorId,
+        setLetterboardTextColorId,
         getButtonColor,
         getButtonTextColor,
+        getLetterboardBgColor,
+        getLetterboardTextColor,
         setCustomLayout,
         resetCustomLayout,
         getCustomLayout,
