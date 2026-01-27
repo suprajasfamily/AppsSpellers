@@ -23,6 +23,8 @@ import {
   SizeOption,
   KeySpacing,
   BUTTON_COLORS,
+  LETTERBOARD_COLORS,
+  LETTERBOARD_TEXT_COLORS,
 } from "@/contexts/PreferencesContext";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 
@@ -139,6 +141,8 @@ export default function SettingsScreen() {
     displayName,
     avatarId,
     buttonColorId,
+    letterboardBgColorId,
+    letterboardTextColorId,
     voiceSettings,
     metronomeVolume,
     metronomeBpm,
@@ -149,6 +153,8 @@ export default function SettingsScreen() {
     setDisplayName,
     setAvatarId,
     setButtonColorId,
+    setLetterboardBgColorId,
+    setLetterboardTextColorId,
     setVoiceSettings,
     setMetronomeVolume,
     setMetronomeBpm,
@@ -272,10 +278,10 @@ export default function SettingsScreen() {
           <View style={[styles.card, { backgroundColor: theme.backgroundDefault }]}>
             <Text style={[styles.label, { color: theme.text }]}>Default Layout</Text>
             <SegmentedControl
-              options={["abc", "qwerty", "grid"]}
+              options={["abc", "qwerty", "grid", "letterboard"]}
               selectedValue={keyboardLayout}
               onValueChange={(value: KeyboardLayout) => setKeyboardLayout(value)}
-              labels={["ABC", "QWERTY", "Grid"]}
+              labels={["ABC", "QWERTY", "Grid", "Board"]}
             />
 
             <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
@@ -318,6 +324,68 @@ export default function SettingsScreen() {
               selectedColorId={buttonColorId}
               onColorChange={setButtonColorId}
             />
+
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              Letterboard Background Color
+            </Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault }]}>
+              Background color for full-screen Letterboard keyboard
+            </Text>
+            <View style={styles.colorGrid}>
+              {LETTERBOARD_COLORS.map((color) => (
+                <Pressable
+                  key={color.id}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setLetterboardBgColorId(color.id);
+                  }}
+                  style={[
+                    styles.colorButton,
+                    { backgroundColor: color.value },
+                    letterboardBgColorId === color.id && {
+                      borderColor: theme.text,
+                      borderWidth: 3,
+                    },
+                  ]}
+                  accessibilityLabel={`Select ${color.label} letterboard background`}
+                >
+                  {letterboardBgColorId === color.id ? (
+                    <Feather name="check" size={20} color={color.value === "#FFFFFF" || color.value === "#F5F5DC" || color.value === "#FFFACD" ? "#000" : "#FFF"} />
+                  ) : null}
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              Letterboard Text Color
+            </Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault }]}>
+              Letter color for full-screen Letterboard keyboard
+            </Text>
+            <View style={styles.colorGrid}>
+              {LETTERBOARD_TEXT_COLORS.map((color) => (
+                <Pressable
+                  key={color.id}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setLetterboardTextColorId(color.id);
+                  }}
+                  style={[
+                    styles.colorButton,
+                    { backgroundColor: color.value },
+                    letterboardTextColorId === color.id && {
+                      borderColor: color.value === "#FFFFFF" ? "#000" : theme.text,
+                      borderWidth: 3,
+                    },
+                  ]}
+                  accessibilityLabel={`Select ${color.label} letterboard text color`}
+                >
+                  {letterboardTextColorId === color.id ? (
+                    <Feather name="check" size={20} color={color.value === "#FFFFFF" ? "#000" : "#FFF"} />
+                  ) : null}
+                </Pressable>
+              ))}
+            </View>
 
             <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
               Custom Key Arrangement
