@@ -144,6 +144,13 @@ export interface VoiceSettings {
   sayAndAfterLetters: boolean;
 }
 
+export interface GridDimensions {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+}
+
 interface Preferences {
   keyboardLayout: KeyboardLayout;
   keyboardSize: SizeOption;
@@ -159,6 +166,7 @@ interface Preferences {
   voiceSettings: VoiceSettings;
   metronomeVolume: number;
   metronomeBpm: number;
+  gridDimensions: GridDimensions | null;
   isLoading: boolean;
 }
 
@@ -184,6 +192,7 @@ interface PreferencesContextType extends Preferences {
   setVoiceSettings: (settings: Partial<VoiceSettings>) => void;
   setMetronomeVolume: (volume: number) => void;
   setMetronomeBpm: (bpm: number) => void;
+  setGridDimensions: (dimensions: GridDimensions | null) => void;
 }
 
 const defaultPreferences: Preferences = {
@@ -218,6 +227,7 @@ const defaultPreferences: Preferences = {
   },
   metronomeVolume: 0.5,
   metronomeBpm: 60,
+  gridDimensions: null,
   isLoading: true,
 };
 
@@ -380,6 +390,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     savePreferences({ metronomeBpm: Math.max(10, Math.min(120, bpm)) });
   };
 
+  const setGridDimensions = (dimensions: GridDimensions | null) => {
+    savePreferences({ gridDimensions: dimensions });
+  };
+
   return (
     <PreferencesContext.Provider
       value={{
@@ -405,6 +419,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setVoiceSettings,
         setMetronomeVolume,
         setMetronomeBpm,
+        setGridDimensions,
       }}
     >
       {children}
