@@ -526,37 +526,6 @@ export default function TypingScreen() {
               autoCorrect={true}
             />
           </View>
-        ) : keyboardLayout === "qwerty" && mode === "keyboard" ? (
-          <View
-            style={[
-              styles.typingArea,
-              {
-                flex: 1,
-                backgroundColor: theme.typingAreaBg,
-                borderColor: theme.typingAreaBorder,
-              },
-            ]}
-          >
-            <TextInput
-              style={[
-                styles.typingTextInput,
-                {
-                  color: qwertyTextColor || theme.text,
-                  fontFamily: Fonts?.sans || "System",
-                },
-              ]}
-              value={text}
-              onChangeText={(newText) => {
-                setText(newText);
-                updateSuggestions(newText);
-              }}
-              placeholder="Tap here and start typing..."
-              placeholderTextColor={theme.tabIconDefault}
-              multiline
-              autoFocus
-              textAlignVertical="top"
-            />
-          </View>
         ) : (
           <Animated.View
             style={[
@@ -588,7 +557,7 @@ export default function TypingScreen() {
           </Animated.View>
         )}
 
-        {mode === "keyboard" && keyboardLayout !== "qwerty" && keyboardLayout !== "letterboard" ? (
+        {mode === "keyboard" && keyboardLayout !== "letterboard" ? (
           <>
             <GestureDetector gesture={panGesture}>
               <View style={[styles.dragHandle, { backgroundColor: theme.backgroundSecondary }]}>

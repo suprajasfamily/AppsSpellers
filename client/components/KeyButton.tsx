@@ -32,11 +32,12 @@ export function KeyButton({
   useCustomColor = true,
 }: KeyButtonProps) {
   const { theme } = useTheme();
-  const { getButtonColor, keyTextSize } = usePreferences();
+  const { getButtonColor, keyTextSize, getKeyTextColor } = usePreferences();
   const scale = useSharedValue(1);
 
   const buttonColor = useCustomColor ? getButtonColor() : theme.specialKey;
   const defaultFontSize = KEY_TEXT_SIZE_VALUES[keyTextSize];
+  const keyTextColor = getKeyTextColor();
 
   const handlePressIn = () => {
     scale.value = withSpring(0.9, { damping: 15, stiffness: 400 });
@@ -56,7 +57,7 @@ export function KeyButton({
   }));
 
   const backgroundColor = isSpecial ? theme.specialKey : buttonColor;
-  const textColor = isSpecial ? theme.text : "#FFFFFF";
+  const textColor = keyTextColor;
 
   return (
     <AnimatedPressable

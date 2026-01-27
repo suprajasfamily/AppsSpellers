@@ -26,6 +26,7 @@ import {
   BUTTON_COLORS,
   LETTERBOARD_COLORS,
   LETTERBOARD_TEXT_COLORS,
+  KEY_TEXT_COLORS,
 } from "@/contexts/PreferencesContext";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 
@@ -52,7 +53,7 @@ const avatars = [
 
 const sizeOptions: SizeOption[] = ["small", "medium", "large"];
 const spacingOptions: KeySpacing[] = ["tight", "normal", "wide"];
-const textSizeOptions: KeyTextSize[] = ["small", "medium", "large"];
+const textSizeOptions: KeyTextSize[] = ["small", "medium", "large", "extra-large"];
 
 function SegmentedControl({
   options,
@@ -154,6 +155,8 @@ export default function SettingsScreen() {
     setTypingAreaSize,
     setKeySpacing,
     setKeyTextSize,
+    keyTextColorId,
+    setKeyTextColorId,
     setDisplayName,
     setAvatarId,
     setButtonColorId,
@@ -333,8 +336,31 @@ export default function SettingsScreen() {
               options={textSizeOptions}
               selectedValue={keyTextSize}
               onValueChange={(value: KeyTextSize) => setKeyTextSize(value)}
-              labels={["Small", "Medium", "Large"]}
+              labels={["Small", "Medium", "Large", "Extra Large"]}
             />
+
+            <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
+              Key Letter Color
+            </Text>
+            <Text style={[styles.helpText, { color: theme.tabIconDefault, marginBottom: Spacing.sm }]}>
+              Change the color of letters and numbers on keys
+            </Text>
+            <View style={styles.colorPickerRow}>
+              {KEY_TEXT_COLORS.map((color) => (
+                <Pressable
+                  key={color.id}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setKeyTextColorId(color.id);
+                  }}
+                  style={[
+                    styles.colorOption,
+                    { backgroundColor: color.value, borderColor: keyTextColorId === color.id ? theme.primary : theme.keyBorder },
+                    keyTextColorId === color.id && styles.colorOptionSelected,
+                  ]}
+                />
+              ))}
+            </View>
 
             <Text style={[styles.label, { color: theme.text, marginTop: Spacing.lg }]}>
               Button Color
@@ -1104,5 +1130,19 @@ const styles = StyleSheet.create({
     height: 26,
     borderRadius: 13,
     backgroundColor: "#FFFFFF",
+  },
+  colorPickerRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  colorOption: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+  },
+  colorOptionSelected: {
+    borderWidth: 3,
   },
 });
