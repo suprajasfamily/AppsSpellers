@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { View, StyleSheet, useWindowDimensions, Pressable, Text, Modal } from "react-native";
+import { View, StyleSheet, useWindowDimensions, Pressable, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -147,8 +147,6 @@ function DraggableKey({
         scale.value = withSpring(1.15, { damping: 12, stiffness: 200 });
         runOnJS(setIsDragging)(true);
         runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
-      } else if (onLongPressForSize) {
-        runOnJS(onLongPressForSize)();
       }
     });
 
@@ -265,58 +263,6 @@ function DraggableKey({
   );
 }
 
-function KeySizeModal({
-  visible,
-  onClose,
-  onSelectSize,
-  currentSize,
-  keyLabel,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onSelectSize: (size: KeySize) => void;
-  currentSize: KeySize;
-  keyLabel: string;
-}) {
-  const { theme } = useTheme();
-  const sizes: KeySize[] = ["small", "medium", "large"];
-
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
-          <Text style={[styles.modalTitle, { color: theme.text }]}>
-            Resize "{keyLabel === SPECIAL_KEYS.SPACE ? "Space" : keyLabel === SPECIAL_KEYS.ENTER ? "Enter" : keyLabel === SPECIAL_KEYS.DELETE ? "Delete" : keyLabel}"
-          </Text>
-          <View style={styles.sizeOptions}>
-            {sizes.map((size) => (
-              <Pressable
-                key={size}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  onSelectSize(size);
-                  onClose();
-                }}
-                style={[
-                  styles.sizeOption,
-                  { 
-                    backgroundColor: currentSize === size ? theme.primary : theme.backgroundSecondary,
-                    borderColor: theme.keyBorder,
-                  },
-                ]}
-              >
-                <Text style={[styles.sizeOptionText, { color: currentSize === size ? "#FFFFFF" : theme.text }]}>
-                  {size.charAt(0).toUpperCase() + size.slice(1)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-      </Pressable>
-    </Modal>
-  );
-}
-
 export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: CustomKeyboardProps) {
   const { theme } = useTheme();
   const { 
@@ -338,8 +284,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
   } = usePreferences();
   const { width, height } = useWindowDimensions();
   const [isCustomizing, setIsCustomizing] = useState(false);
-  const [sizeModalVisible, setSizeModalVisible] = useState(false);
-  const [selectedKeyForSize, setSelectedKeyForSize] = useState<string | null>(null);
   const [isResizing, setIsResizing] = useState(false);
 
   const gridWidth = useSharedValue(gridDimensions?.width ?? width * 0.9);
@@ -483,11 +427,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
     }
   };
 
-  const handleLongPressForSize = (key: string) => {
-    setSelectedKeyForSize(key);
-    setSizeModalVisible(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  };
 
   let keyIndex = 0;
 
@@ -519,7 +458,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
                       isCustomizing={isCustomizing}
                       onSwap={handleSwap}
                       onPress={() => handleKeyAction(key)}
-                      onLongPressForSize={() => handleLongPressForSize(key)}
                       totalKeys={customKeys.length}
                       getButtonColor={getButtonColor}
                       getButtonTextColor={getButtonTextColor}
@@ -538,19 +476,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
             );
           })}
         </View>
-          <KeySizeModal
-          visible={sizeModalVisible}
-          onClose={() => setSizeModalVisible(false)}
-          currentSize={selectedKeyForSize ? getKeySize(keyboardLayout, selectedKeyForSize) : "medium"}
-          keyLabel={selectedKeyForSize || ""}
-          onSelectSize={(size: KeySize) => {
-            if (selectedKeyForSize) {
-              setKeySize(keyboardLayout, selectedKeyForSize, size);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }
-            setSizeModalVisible(false);
-          }}
-        />
       </View>
     );
   }
@@ -601,17 +526,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
             </GestureDetector>
           </Animated.View>
         </GestureDetector>
-        <KeySizeModal
-          visible={sizeModalVisible}
-          onClose={() => setSizeModalVisible(false)}
-          onSelectSize={(size) => {
-            if (selectedKeyForSize) {
-              setKeySize(keyboardLayout, selectedKeyForSize, size);
-            }
-          }}
-          currentSize={selectedKeyForSize ? getKeySize(keyboardLayout, selectedKeyForSize) : "medium"}
-          keyLabel={selectedKeyForSize || ""}
-        />
       </View>
     );
   }
@@ -635,7 +549,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
                   isCustomizing={isCustomizing}
                   onSwap={handleSwap}
                   onPress={() => handleKeyAction(key)}
-                  onLongPressForSize={() => handleLongPressForSize(key)}
                   totalKeys={customKeys.length}
                   getButtonColor={getButtonColor}
                   getButtonTextColor={getButtonTextColor}
@@ -654,17 +567,6 @@ export function CustomKeyboard({ onKeyPress, onBackspace, onSpace, onEnter }: Cu
         ))}
       </View>
 
-      <KeySizeModal
-        visible={sizeModalVisible}
-        onClose={() => setSizeModalVisible(false)}
-        onSelectSize={(size) => {
-          if (selectedKeyForSize) {
-            setKeySize(keyboardLayout, selectedKeyForSize, size);
-          }
-        }}
-        currentSize={selectedKeyForSize ? getKeySize(keyboardLayout, selectedKeyForSize) : "medium"}
-        keyLabel={selectedKeyForSize || ""}
-      />
     </View>
   );
 }
@@ -821,37 +723,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 2,
     right: 2,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    padding: Spacing.xl,
-    borderRadius: BorderRadius.md,
-    minWidth: 250,
-  },
-  modalTitle: {
-    fontSize: Typography.h4.fontSize,
-    fontWeight: "600",
-    textAlign: "center",
-    marginBottom: Spacing.lg,
-  },
-  sizeOptions: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  sizeOption: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-  },
-  sizeOptionText: {
-    fontSize: Typography.body.fontSize,
-    fontWeight: "500",
   },
   letterboardBottomBar: {
     flexDirection: "row",
