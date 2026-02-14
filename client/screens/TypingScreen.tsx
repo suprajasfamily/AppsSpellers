@@ -9,6 +9,8 @@ import {
   Alert,
   useWindowDimensions,
   ActivityIndicator,
+  Platform,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -16,6 +18,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Speech from "expo-speech";
+import * as SMS from "expo-sms";
+import * as Contacts from "expo-contacts";
 import { useAudioPlayer } from "expo-audio";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from "react-native-reanimated";
@@ -289,6 +293,87 @@ export default function TypingScreen() {
     });
   }, [text, isSpeaking, voiceSettings]);
 
+  const handleSendText = useCallback(async () => {
+    if (!text.trim()) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Alert.alert("Nothing to Send", "Type some text first before sending a message.");
+      return;
+    }
+
+    const isAvailable = await SMS.isAvailableAsync();
+    if (!isAvailable) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("SMS Not Available", "Text messaging is not available on this device. Please run the app on a phone with Expo Go to use this feature.");
+      return;
+    }
+
+    const { status } = await Contacts.requestPermissionsAsync();
+    if (status !== "granted") {
+      if (Platform.OS !== "web") {
+        Alert.alert(
+          "Contacts Permission Needed",
+          "Please allow access to contacts to pick a recipient.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Open Settings",
+              onPress: async () => {
+                try {
+                  await Linking.openSettings();
+                } catch {}
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert("Contacts Permission Needed", "Please allow access to contacts to pick a recipient.");
+      }
+      return;
+    }
+
+    const { data } = await Contacts.getContactsAsync({
+      fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Name],
+      sort: Contacts.SortTypes.FirstName,
+    });
+
+    const contactsWithPhones = data.filter(
+      (c) => c.phoneNumbers && c.phoneNumbers.length > 0
+    );
+
+    if (contactsWithPhones.length === 0) {
+      Alert.alert("No Contacts", "No contacts with phone numbers were found.");
+      return;
+    }
+
+    const topContacts = contactsWithPhones.slice(0, 20);
+    const options = topContacts.map((c) => {
+      const phone = c.phoneNumbers?.[0]?.number || "";
+      return `${c.name || "Unknown"} (${phone})`;
+    });
+
+    Alert.alert(
+      "Send Text To",
+      "Pick a contact to send your message to:",
+      [
+        ...options.map((label, index) => ({
+          text: label,
+          onPress: async () => {
+            const contact = topContacts[index];
+            const phoneNumber = contact.phoneNumbers?.[0]?.number;
+            if (phoneNumber) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              const { result } = await SMS.sendSMSAsync([phoneNumber], text.trim());
+              if (result === "sent") {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            }
+          },
+        })),
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  }, [text]);
+
   const handleSaveToDrive = useCallback(async () => {
     if (!text.trim()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -413,6 +498,16 @@ export default function TypingScreen() {
               accessibilityLabel={metronomeActive ? "Stop metronome" : "Start metronome"}
             >
               <Feather name="clock" size={20} color={metronomeActive ? "#FFFFFF" : theme.text} />
+            </Pressable>
+            <Pressable
+              onPress={handleSendText}
+              style={[
+                styles.headerButton,
+                { backgroundColor: theme.backgroundSecondary, marginLeft: Spacing.xs },
+              ]}
+              accessibilityLabel="Send as text message"
+            >
+              <Feather name="send" size={20} color={theme.text} />
             </Pressable>
             {driveConnected ? (
               <Pressable
