@@ -78,7 +78,6 @@ interface DraggableKeyProps {
   isCustomizing: boolean;
   onSwap: (fromIndex: number, toIndex: number) => void;
   onPress: () => void;
-  onLongPressForSize?: () => void;
   totalKeys: number;
   getButtonColor: () => string;
   getButtonTextColor: () => string;
@@ -99,7 +98,6 @@ function DraggableKey({
   isCustomizing,
   onSwap,
   onPress,
-  onLongPressForSize,
   totalKeys,
   getButtonColor,
   getButtonTextColor,
